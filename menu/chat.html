@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>看板娘聊天 | epoch shop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/site.css" />
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <div class="bg-mask"></div>
+
+  <header class="site-header">
+    <nav class="nav-wrap">
+      <a class="menu-btn" href="../index.html">首頁</a>
+      <a class="menu-btn" href="products.html">商品頁</a>
+      <a class="menu-btn" href="hosting.html">主機服務</a>
+      <a class="menu-btn" href="cart.html">購物車（<span data-cart-count>0</span>）</a>
+      <a class="menu-btn" href="checkout.html">結帳頁</a>
+      <a class="menu-btn active" href="chat.html">看板娘聊天</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>看板娘 AI 客服</h1>
+      <p class="subtitle">使用者可輸入「想說什麼呢」，由看板娘回覆（連接後端 Ollama）。</p>
+      <div class="notice" style="margin-bottom: 1rem;">
+        API 放置位置：<code>js/chat.js</code> 的 <code>CHAT_ENDPOINT</code>，預設走 <code>/api/chat</code>。
+      </div>
+
+      <div class="chat-shell">
+        <div id="chat-log" class="chat-log"></div>
+        <div class="chat-input-row">
+          <input id="chat-input" type="text" placeholder="想說什麼呢" />
+          <button id="send-btn" class="primary">送出</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+    <footer class="site-footer">© <span id="year"></span> EPOCH SHOP<br />30 N Gould St Ste R, Sheridan, SHERIDAN COUNTY, WY 82801 USA<br />Phone: (307) 204-5345</footer>
+
+    <div class="waifu">
+    <canvas id="live2d-canvas" class="live2d"></canvas>
+  </div>
+
+
+
+  <script src="../js/matrix.js"></script>
+  <script src="../js/site.js"></script>
+  <script src="../js/cart.js"></script>
+  <script src="../js/chat.js"></script>
+
+  <script src="../assets/jquery.min.js?v=3.3.1"></script>
+  <script src="../assets/jquery-ui.min.js?v=1.12.1"></script>
+  <script src="../assets/vendor/pixi.min.js"></script>
+  <script src="../assets/vendor/live2dcubismcore.min.js"></script>
+  <script src="../assets/vendor/pixi-live2d-cubism4.min.js"></script>
+  <script src="../assets/vendor/pixi-live2d-display.min.js"></script>
+  <script src="../js/live2d-boy.js"></script>
+</body>
+</html>
+
+

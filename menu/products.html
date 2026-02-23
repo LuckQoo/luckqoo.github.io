@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>商品頁 | epoch shop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/site.css" />
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <div class="bg-mask"></div>
+
+  <header class="site-header">
+    <nav class="nav-wrap">
+      <a class="brand-link" href="../index.html">EPOCH SHOP</a>
+      <a class="menu-btn" href="../index.html">首頁</a>
+      <a class="menu-btn active" href="products.html">商品頁</a>
+      <a class="menu-btn" href="hosting.html">主機服務</a>
+      <a class="menu-btn" href="cart.html">購物車（<span data-cart-count>0</span>）</a>
+      <a class="menu-btn" href="checkout.html">結帳頁</a>
+      <a class="menu-btn" href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">生活小品</a>
+      </div>
+      <a class="menu-btn" href="contact.html">聯絡我們</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>完整商品與服務</h1>
+      <p class="subtitle">依照您喜好：模型商品、虛擬主機三方案、機器碼服務清單與保障分類。</p>
+    </section>
+
+    <h2 class="section-head">伺服器模型精選</h2>
+    <section class="grid products">
+      <article class="card">
+        <h3>車輛模型</h3>
+        <p class="subtitle">細膩外觀與內裝、優化 LOD，兼顧效能與視覺。</p>
+        <p class="price">NT$ 3,600</p>
+        <button class="primary" data-id="vehicle-model" data-name="車輛模型" data-price="3600">加入購物車</button>
+      </article>
+      <article class="card">
+        <h3>建築 / 地圖</h3>
+        <p class="subtitle">場景、室內外建築與陳設，營造沉浸式城市風格。</p>
+        <p class="price">NT$ 4,200</p>
+        <button class="primary" data-id="map-model" data-name="建築地圖資源" data-price="4200">加入購物車</button>
+      </article>
+      <article class="card">
+        <h3>人物 / 服裝</h3>
+        <p class="subtitle">角色外觀、配件與服飾，支援多套件搭配與調整。</p>
+        <p class="price">NT$ 2,800</p>
+        <button class="primary" data-id="npc-skin" data-name="人物服裝資源" data-price="2800">加入購物車</button>
+      </article>
+      <article class="card">
+        <h3>HWIDSpoofer</h3>
+        <p class="subtitle">用於合法測試與隱私保護的 HWID 管理與重置工具。</p>
+        <p class="price">NT$ 6,500</p>
+        <button class="primary" data-id="hwid-spoofer" data-name="HWIDSpoofer" data-price="6500">加入購物車</button>
+      </article>
+      <article class="card">
+        <h3>代碼撰寫</h3>
+        <p class="subtitle">網站前後端、腳本自動化、Bot、API 串接與效能優化。</p>
+        <p class="price">NT$ 8,000 起</p>
+        <button class="primary" data-id="code-service" data-name="代碼撰寫服務" data-price="8000">加入購物車</button>
+      </article>
+    </section>
+
+    <h2 class="section-head">機器碼維修服務</h2>
+    <section class="card">
+      <p class="subtitle">支援項目如下：</p>
+      <ul class="list-clean game-list">
+        <li>Fortnite | :error: Battle Bus Kick & Official Tournaments</li>
+        <li>Valorant | :error: Van 152 Ban Code & Fixes Val 5 Ban Code</li>
+        <li>Apex Legends | :error: Client Game: Banned</li>
+        <li>Siege | :error: You Have Been Permanently Banned</li>
+        <li>Fivem | :error: Connection Error: CFX/Globally Banned</li>
+        <li>Rust | :error: Permanently Banned Behalf Game Developer</li>
+        <li>Call Of Duty | :error: Connection Error: Permanently Banned</li>
+        <li>Overwatch 2 | :error: Unauthorized Program</li>
+        <li>League of Legends | :error: Permanently Banned</li>
+        <li>Dead By Daylight | :error: You Have Been Banned</li>
+        <li>DayZ | :error: You Were Kicked Off The Game</li>
+        <li>Forza Horizon | :error: You Have Been Permanently Banned</li>
+        <li>Sea of Thieves | :error: You Are Permanently Banned</li>
+        <li>War Frame | :error: You Have Been Suspended</li>
+        <li>PUBG | :error: You Have Been Banned</li>
+        <li>GTA V | :error: Banned From GTA Online</li>
+      </ul>
+      <p class="price">NT$ 1000</p>
+      <button class="primary" data-id="machine-code-service" data-name="機器碼維修服務" data-price="1000">加入購物車</button>
+    </section>
+
+    <h2 class="section-head">服務保障分類</h2>
+    <section class="feature-grid">
+      <article class="card">
+        <h3>保障內容</h3>
+        <ul class="list-clean">
+          <li>無需更換硬體，節省不必要費用</li>
+          <li>成功率高達 90%，解碼失敗全額退款</li>
+          <li>24 小時內快速處理，技術團隊線上支援</li>
+          <li>最重要的是解碼失敗全額退款</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>注意事項</h3>
+        <ul class="list-clean">
+          <li>購買前請先描述設備狀況與遊戲封鎖代碼</li>
+          <li>服務內容以雙方確認項目為準</li>
+          <li>如需額外功能請先於下單前提出</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>購買須知</h3>
+        <ul class="list-clean">
+          <li>請在購買前詳細閱讀遊戲條款</li>
+          <li>本服務僅限以上鎖碼遊戲設備識別異常問題</li>
+          <li>若經確認無法成功解碼，提供全額退款</li>
+          <li>違反遊戲條款本店不負責</li>
+        </ul>
+      </article>
+    </section>
+
+    <div class="actions" style="margin-top: 1rem;">
+      <a class="button ghost" href="cart.html">前往購物車</a>
+    </div>
+  </main>
+
+    <footer class="site-footer">© <span id="year"></span> EPOCH SHOP<br />30 N Gould St Ste R, Sheridan, SHERIDAN COUNTY, WY 82801 USA<br />Phone: (307) 204-5345</footer>
+
+    <div class="waifu">
+    <canvas id="live2d-canvas" class="live2d"></canvas>
+  </div>
+
+
+
+  <script src="../js/matrix.js"></script>
+  <script src="../js/site.js"></script>
+  <script src="../js/cart.js"></script>
+  <script src="../js/chat.js"></script>
+  <script>
+    document.querySelectorAll("button[data-id]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        window.cartApi.addToCart({
+          id: btn.dataset.id,
+          name: btn.dataset.name,
+          price: Number(btn.dataset.price)
+        });
+        btn.textContent = "已加入";
+      });
+    });
+  </script>
+
+  <script src="../assets/jquery.min.js?v=3.3.1"></script>
+  <script src="../assets/jquery-ui.min.js?v=1.12.1"></script>
+  <script src="../assets/vendor/pixi.min.js"></script>
+  <script src="../assets/vendor/live2dcubismcore.min.js"></script>
+  <script src="../assets/vendor/pixi-live2d-cubism4.min.js"></script>
+  <script src="../assets/vendor/pixi-live2d-display.min.js"></script>
+  <script src="../js/live2d-boy.js"></script>
+</body>
+</html>
+
+
+
+
+

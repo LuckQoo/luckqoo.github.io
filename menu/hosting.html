@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>虛擬主機服務 | epoch shop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/site.css" />
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <div class="bg-mask"></div>
+
+  <header class="site-header">
+    <nav class="nav-wrap">
+      <a class="brand-link" href="../index.html">EPOCH SHOP</a>
+      <a class="menu-btn" href="../index.html">首頁</a>
+      <a class="menu-btn" href="products.html">商品頁</a>
+      <a class="menu-btn active" href="hosting.html">主機服務</a>
+      <a class="menu-btn" href="cart.html">購物車（<span data-cart-count>0</span>）</a>
+      <a class="menu-btn" href="checkout.html">結帳頁</a>
+      <a class="menu-btn" href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">生活小品</a>
+      </div>
+      <a class="menu-btn" href="contact.html">聯絡我們</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>虛擬主機服務</h1>
+      <p class="subtitle">針對 私人伺服器 與遊戲社群調校，穩定、低延遲、即時支援。</p>
+    </section>
+
+    <section class="plan-grid" style="margin-top: 1rem;">
+      <article class="card plan">
+        <h3>E 系列主機</h3>
+        <p class="price">5000~18000/月</p>
+        <ul class="list-clean">
+          <li>高頻 CPU</li>
+          <li>NVMe 儲存</li>
+          <li>自動備份</li>
+          <li>自動簽發與續期 SSL 憑證</li>
+          <li>支援多網域</li>
+          <li>DDoS 防護</li>
+          <li>基礎管理支援</li>
+        </ul>
+        <button class="primary" data-id="host-e-series" data-name="E 系列主機" data-price="5000">索取方案</button>
+      </article>
+      <article class="card plan">
+        <span class="hot-tag">熱門</span>
+        <h3>N 系列主機</h3>
+        <p class="price">20000/月</p>
+        <ul class="list-clean">
+          <li>均衡效能</li>
+          <li>彈性擴充</li>
+          <li>自動備份</li>
+          <li>自動簽發與續期 SSL 憑證</li>
+          <li>支援多網域</li>
+          <li>全球網路</li>
+          <li>進階監控</li>
+        </ul>
+        <button class="primary" data-id="host-n-series" data-name="N 系列主機" data-price="20000">立即聯繫</button>
+      </article>
+      <article class="card plan">
+        <h3>自訂主機服務</h3>
+        <p class="price">洽詢</p>
+        <ul class="list-clean">
+          <li>客製規格</li>
+          <li>專屬環境</li>
+          <li>支援多網域</li>
+          <li>維運監控與基本代維</li>
+          <li>網域/郵件代設定（選配）</li>
+        </ul>
+        <button class="primary" data-id="host-custom" data-name="自訂主機服務" data-price="0">討論需求</button>
+      </article>
+    </section>
+
+    <section class="feature-grid" style="margin-top: 1rem;">
+      <article class="card">
+        <h3>穩定線路</h3>
+        <p class="subtitle">優化路由、資料中心直連，遊戲互動更流暢。</p>
+      </article>
+      <article class="card">
+        <h3>即時部署</h3>
+        <p class="subtitle">自動化面板，一鍵啟動與重啟，省時省力。</p>
+      </article>
+      <article class="card">
+        <h3>安全防護</h3>
+        <p class="subtitle">多層防護與監控，降低攻擊與停機風險。</p>
+      </article>
+      <article class="card">
+        <h3>專人支援</h3>
+        <p class="subtitle">中文客服時區，快速處理技術問題。</p>
+      </article>
+    </section>
+
+    <div class="actions" style="margin-top: 1rem;">
+      <a class="button ghost" href="cart.html">前往購物車</a>
+    </div>
+  </main>
+
+    <footer class="site-footer">© <span id="year"></span> EPOCH SHOP<br />30 N Gould St Ste R, Sheridan, SHERIDAN COUNTY, WY 82801 USA<br />Phone: (307) 204-5345</footer>
+
+    <div class="waifu">
+    <canvas id="live2d-canvas" class="live2d"></canvas>
+  </div>
+
+
+
+  <script src="../js/matrix.js"></script>
+  <script src="../js/site.js"></script>
+  <script src="../js/cart.js"></script>
+  <script src="../js/chat.js"></script>
+  <script>
+    document.querySelectorAll("button[data-id]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        window.cartApi.addToCart({
+          id: btn.dataset.id,
+          name: btn.dataset.name,
+          price: Number(btn.dataset.price)
+        });
+        btn.textContent = "已加入";
+      });
+    });
+  </script>
+
+  <script src="../assets/jquery.min.js?v=3.3.1"></script>
+  <script src="../assets/jquery-ui.min.js?v=1.12.1"></script>
+  <script src="../assets/vendor/pixi.min.js"></script>
+  <script src="../assets/vendor/live2dcubismcore.min.js"></script>
+  <script src="../assets/vendor/pixi-live2d-cubism4.min.js"></script>
+  <script src="../assets/vendor/pixi-live2d-display.min.js"></script>
+  <script src="../js/live2d-boy.js"></script>
+</body>
+</html>
+
+
+

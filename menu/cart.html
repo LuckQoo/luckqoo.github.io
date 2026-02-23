@@ -1,0 +1,100 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>購物車 | epoch shop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/site.css" />
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <div class="bg-mask"></div>
+
+  <header class="site-header">
+    <nav class="nav-wrap">
+      <a class="brand-link" href="../index.html">EPOCH SHOP</a>
+      <a class="menu-btn" href="../index.html">首頁</a>
+      <a class="menu-btn" href="products.html">商品頁</a>
+      <a class="menu-btn" href="hosting.html">主機服務</a>
+      <a class="menu-btn active" href="cart.html">購物車（<span data-cart-count>0</span>）</a>
+      <a class="menu-btn" href="checkout.html">結帳頁</a>
+      <a class="menu-btn" href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">生活小品</a>
+      </div>
+      </div>
+      <a class="menu-btn" href="contact.html">聯絡我們</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>購物車</h1>
+      <div id="cart-list" class="card"></div>
+      <p class="price" id="cart-total">總計：NT$ 0</p>
+      <div class="actions">
+        <button class="ghost" id="clear-cart">清空購物車</button>
+        <a class="button primary" href="checkout.html">前往結帳</a>
+      </div>
+    </section>
+  </main>
+
+    <footer class="site-footer">© <span id="year"></span> EPOCH SHOP<br />30 N Gould St Ste R, Sheridan, SHERIDAN COUNTY, WY 82801 USA<br />Phone: (307) 204-5345</footer>
+
+    <div class="waifu">
+    <canvas id="live2d-canvas" class="live2d"></canvas>
+  </div>
+
+
+
+  <script src="../js/matrix.js"></script>
+  <script src="../js/site.js"></script>
+  <script src="../js/cart.js"></script>
+  <script src="../js/chat.js"></script>
+  <script>
+    function renderCart() {
+      const list = document.getElementById("cart-list");
+      const items = window.cartApi.getCart();
+      if (!items.length) {
+        list.innerHTML = "<p class='subtitle'>目前購物車沒有商品。</p>";
+      } else {
+        list.innerHTML = items.map((item) => `
+          <div class="cart-row">
+            <div>${item.name} x ${item.qty}</div>
+            <div>NT$ ${item.price * item.qty}</div>
+            <button class="ghost" data-remove="${item.id}">移除</button>
+          </div>
+        `).join("");
+      }
+      document.getElementById("cart-total").textContent = `總計：NT$ ${window.cartApi.cartTotal()}`;
+
+      document.querySelectorAll("[data-remove]").forEach((btn) => {
+        btn.onclick = () => {
+          window.cartApi.removeFromCart(btn.dataset.remove);
+          renderCart();
+        };
+      });
+    }
+
+    document.getElementById("clear-cart").addEventListener("click", () => {
+      window.cartApi.clearCart();
+      renderCart();
+    });
+
+    renderCart();
+  </script>
+
+  <script src="../assets/jquery.min.js?v=3.3.1"></script>
+  <script src="../assets/jquery-ui.min.js?v=1.12.1"></script>
+  <script src="../assets/vendor/pixi.min.js"></script>
+  <script src="../assets/vendor/live2dcubismcore.min.js"></script>
+  <script src="../assets/vendor/pixi-live2d-cubism4.min.js"></script>
+  <script src="../assets/vendor/pixi-live2d-display.min.js"></script>
+  <script src="../js/live2d-boy.js"></script>
+</body>
+</html>
+
+
+
+
+
+

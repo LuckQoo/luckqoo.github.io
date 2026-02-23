@@ -1,0 +1,77 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>聯絡我們 | EPOCH SHOP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/site.css" />
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <div class="bg-mask"></div>
+
+  <header class="site-header">
+    <nav class="nav-wrap">
+      <a class="brand-link" href="../index.html">EPOCH SHOP</a>
+      <a class="menu-btn" href="../index.html">首頁</a>
+      <a class="menu-btn" href="products.html">商品頁</a>
+      <a class="menu-btn" href="hosting.html">主機服務</a>
+      <a class="menu-btn" href="cart.html">購物車（<span data-cart-count>0</span>）</a>
+      <a class="menu-btn" href="checkout.html">結帳頁</a>
+      <a class="menu-btn" href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">生活小品</a>
+      <a class="menu-btn active" href="contact.html">聯絡我們</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1 class="cyber-title">聯絡我們</h1>
+      <form id="contact-form" class="card contact-form" style="margin-top: 1rem;" action="https://formsubmit.co/aiyu@epoch-shop.com" method="POST" target="hidden_iframe">
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+          <input type="text" name="surname" id="surname" placeholder="姓" required />
+          <input type="text" name="given_name" id="given_name" placeholder="名" required />
+        </div>
+        <div style="margin-top: 0.6rem;">
+          <input type="email" name="email" id="email" placeholder="您的信箱" required />
+        </div>
+        <div style="margin-top: 0.6rem;">
+          <textarea name="message" id="message" rows="7" placeholder="請輸入要發送給我們的內容" required></textarea>
+        </div>
+
+        <input type="hidden" name="_subject" value="EPOCH SHOP 聯絡表單新訊息" />
+        <input type="hidden" name="_captcha" value="false" />
+        <input type="hidden" name="_template" value="table" />
+
+        <div class="actions" style="margin-top: 0.8rem;">
+          <button type="submit" class="primary">發送</button>
+        </div>
+        <p id="contact-status" class="subtitle" style="margin-top: 0.6rem;"></p>
+      </form>
+      <iframe name="hidden_iframe" style="display:none;" title="hidden submit target"></iframe>
+    </section>
+  </main>
+
+  <footer class="site-footer">© <span id="year"></span> EPOCH SHOP<br />30 N Gould St Ste R, Sheridan, SHERIDAN COUNTY, WY 82801 USA<br />Phone: (307) 204-5345</footer>
+
+    <div class="waifu">
+    <canvas id="live2d-canvas" class="live2d"></canvas>
+  </div>
+
+
+
+  <script src="../js/matrix.js"></script>
+  <script src="../js/site.js"></script>
+  <script src="../js/cart.js"></script>
+  <script src="../js/chat.js"></script>
+  <script src="../js/contact.js"></script>
+
+  <script src="../assets/jquery.min.js?v=3.3.1"></script>
+  <script src="../assets/jquery-ui.min.js?v=1.12.1"></script>
+  <script src="../assets/vendor/pixi.min.js"></script>
+  <script src="../assets/vendor/live2dcubismcore.min.js"></script>
+  <script src="../assets/vendor/pixi-live2d-cubism4.min.js"></script>
+  <script src="../assets/vendor/pixi-live2d-display.min.js"></script>
+  <script src="../js/live2d-boy.js"></script>
+</body>
+</html>

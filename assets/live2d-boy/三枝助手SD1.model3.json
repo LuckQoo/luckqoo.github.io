@@ -1,0 +1,61 @@
+{
+  "Version": 3,
+  "FileReferences": {
+    "Moc": "三枝助手SD1.moc3",
+    "Textures": [
+      "三枝助手SD1.2048/texture_00.png",
+      "三枝助手SD1.2048/texture_01.png",
+      "三枝助手SD1.2048/texture_02.png",
+      "三枝助手SD1.2048/texture_03.png"
+    ],
+    "Physics": "三枝助手SD1.physics3.json",
+    "Expressions": [
+      {
+        "Name": "expression1",
+        "File": "expression/sekimenn.exp3.json"
+      },
+      {
+        "Name": "expression2",
+        "File": "expression/aozame.exp3.json"
+      },
+      {
+        "Name": "expression3",
+        "File": "expression/kira.exp3.json"
+      },
+      {
+        "Name": "expression4",
+        "File": "expression/heart.exp3.json"
+      },
+      {
+        "Name": "expression5",
+        "File": "expression/uruuru.exp3.json"
+      }
+    ],
+    "Motions": {
+      "": [
+        {
+          "File": "motion/heart.motion3.json"
+        },
+        {
+          "File": "motion/namida.motion3.json"
+        },
+        {
+          "File": "motion/sakura.motion3.json"
+        }
+      ]
+    }
+  },
+  "Groups": [
+    {
+      "Target": "Parameter",
+      "Name": "EyeBlink",
+      "Ids": []
+    },
+    {
+      "Target": "Parameter",
+      "Name": "LipSync",
+      "Ids": []
+    }
+  ],
+  "HitAreas": []
+}

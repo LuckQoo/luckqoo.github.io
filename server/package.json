@@ -1,0 +1,14 @@
+{
+  "name": "epoch-ollama-backend",
+  "version": "1.0.0",
+  "description": "Backend proxy for Ollama",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  }
+}
