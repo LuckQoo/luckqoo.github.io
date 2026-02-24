@@ -129,7 +129,6 @@ function createChatbox() {
   wrap.className = "waifu-chatbox";
   wrap.innerHTML = `
     <div class="waifu-chat-row">
-      <div id="waifu-chat-status" style="font-size:12px;color:#b9ffcf;">Epoch 助手在線</div>
       <input id="waifu-chat-input" type="text" placeholder="對 Epoch聊天助手 說點什麼，按 Enter 送出" />
     </div>
   `;
