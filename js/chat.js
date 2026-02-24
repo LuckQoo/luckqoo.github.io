@@ -1,4 +1,13 @@
-﻿const CHAT_ENDPOINT = window.EPOCH_CHAT_ENDPOINT || "https://api.epoch-shop.shop/api/generate";
+﻿const isLocal =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1" ||
+  window.location.protocol === "file:";
+
+const CHAT_ENDPOINT =
+  window.EPOCH_CHAT_ENDPOINT ||
+  (isLocal
+    ? "http://127.0.0.1:8787/api/chat"
+    : "https://api.epoch-shop.shop/api/chat");
 const CHAT_MODEL = window.EPOCH_CHAT_MODEL || "epochGPT:latest";
 
 function showWaifuBubble(text) {
@@ -32,14 +41,14 @@ async function callOllama(prompt) {
     },
     body: JSON.stringify({
       model: CHAT_MODEL,
-      prompt,
+      message: prompt,
       stream: false
     })
   });
 
   if (!res.ok) throw new Error(`Ollama 回應失敗 (${res.status})`);
   const data = await res.json();
-  return data?.response || "我有收到訊息，但暫時沒有內容。";
+  return data?.reply || data?.response || "我有收到訊息，但暫時沒有內容。";
 }
 
 function createChatbox() {
