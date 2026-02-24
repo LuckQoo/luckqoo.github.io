@@ -59,6 +59,51 @@ function postJson(urlString, payload) {
   });
 }
 
+function streamOllama(urlString, payload, onChunk, onEnd, onError) {
+  const url = new URL(urlString);
+  const data = JSON.stringify(payload);
+  const isHttps = url.protocol === "https:";
+  const lib = isHttps ? https : http;
+
+  const options = {
+    hostname: url.hostname,
+    port: url.port || (isHttps ? 443 : 80),
+    path: `${url.pathname}${url.search || ""}`,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(data)
+    }
+  };
+
+  const req = lib.request(options, (res) => {
+    let buffer = "";
+    res.setEncoding("utf8");
+    res.on("data", (chunk) => {
+      buffer += chunk;
+      let idx = buffer.indexOf("\n");
+      while (idx !== -1) {
+        const line = buffer.slice(0, idx).trim();
+        buffer = buffer.slice(idx + 1);
+        if (line) {
+          try {
+            const obj = JSON.parse(line);
+            if (obj && typeof obj.response === "string") onChunk(obj.response);
+            if (obj && obj.done) onEnd();
+          } catch {
+            // ignore malformed line
+          }
+        }
+        idx = buffer.indexOf("\n");
+      }
+    });
+    res.on("end", onEnd);
+  });
+  req.on("error", onError);
+  req.write(data);
+  req.end();
+}
+
 function getPrompt(body) {
   const safeBody = body && typeof body === "object" ? body : {};
   const raw = typeof safeBody.message === "string" ? safeBody.message : safeBody.prompt;
@@ -95,6 +140,25 @@ app.post("/api/chat", async (req, res) => {
   } catch (err) {
     return res.status(502).json({ error: "ollama_unreachable", details: err.message });
   }
+});
+
+app.post("/api/chat-stream", (req, res) => {
+  const message = getPrompt(req.body);
+  if (!message) {
+    return res.status(400).json({ error: "message is required" });
+  }
+
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+
+  streamOllama(
+    `${OLLAMA_URL}/api/generate`,
+    { model: OLLAMA_MODEL, prompt: message, stream: true },
+    (chunk) => res.write(chunk),
+    () => res.end(),
+    (err) => res.status(502).end(`error:${err.message || "ollama_unreachable"}`)
+  );
 });
 
 app.post("/api/generate", async (req, res) => {

@@ -8,9 +8,30 @@ const CHAT_ENDPOINT =
   (isLocal
     ? "http://127.0.0.1:8787/api/chat"
     : "https://api.epoch-shop.shop/api/chat");
+const CHAT_STREAM_ENDPOINT =
+  window.EPOCH_CHAT_STREAM_ENDPOINT ||
+  (isLocal
+    ? "http://127.0.0.1:8787/api/chat-stream"
+    : "https://api.epoch-shop.shop/api/chat-stream");
 const CHAT_MODEL = window.EPOCH_CHAT_MODEL || "epochGPT:latest";
 
-function showWaifuBubble(text) {
+function getStatusEl() {
+  return document.getElementById("waifu-chat-status");
+}
+
+function setStatus(online) {
+  const el = getStatusEl();
+  if (!el) return;
+  if (online) {
+    el.textContent = "Epoch 助手在線";
+    el.style.color = "#7dffb5";
+  } else {
+    el.textContent = "Epoch 助手不在線";
+    el.style.color = "#ffb0b0";
+  }
+}
+
+function showWaifuBubble(text, isFinal) {
   const waifu = document.querySelector(".waifu");
   if (!waifu) return;
 
@@ -29,7 +50,9 @@ function showWaifuBubble(text) {
   bubble.style.top = `${Math.max(80, rect.top - 80)}px`;
 
   clearTimeout(showWaifuBubble._timer);
-  showWaifuBubble._timer = setTimeout(() => bubble.remove(), 9000);
+  if (isFinal) {
+    showWaifuBubble._timer = setTimeout(() => bubble.remove(), 9000);
+  }
 }
 
 async function callOllama(prompt) {
@@ -51,6 +74,54 @@ async function callOllama(prompt) {
   return data?.reply || data?.response || "我有收到訊息，但暫時沒有內容。";
 }
 
+async function callOllamaStream(prompt, onUpdate) {
+  const res = await fetch(CHAT_STREAM_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "text/plain"
+    },
+    body: JSON.stringify({
+      model: CHAT_MODEL,
+      message: prompt,
+      stream: true
+    })
+  });
+
+  if (!res.ok || !res.body) {
+    throw new Error(`Ollama 回應失敗 (${res.status})`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    fullText += decoder.decode(value, { stream: true });
+    onUpdate(fullText, false);
+  }
+
+  fullText += decoder.decode();
+  onUpdate(fullText, true);
+  return fullText;
+}
+
+async function checkOnline() {
+  try {
+    const url = new URL(CHAT_ENDPOINT);
+    url.pathname = "/healthz";
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 1500);
+    const res = await fetch(url.toString(), { signal: controller.signal });
+    clearTimeout(timer);
+    setStatus(res.ok);
+  } catch {
+    setStatus(false);
+  }
+}
+
 function createChatbox() {
   if (document.querySelector(".waifu-chatbox")) return;
 
@@ -58,7 +129,7 @@ function createChatbox() {
   wrap.className = "waifu-chatbox";
   wrap.innerHTML = `
     <div class="waifu-chat-row">
-      <div style="font-size:12px;color:#b9ffcf;">目前：AI 自動回覆</div>
+      <div id="waifu-chat-status" style="font-size:12px;color:#b9ffcf;">Epoch 助手在線</div>
       <input id="waifu-chat-input" type="text" placeholder="對 Epoch聊天助手 說點什麼，按 Enter 送出" />
     </div>
   `;
@@ -75,14 +146,26 @@ function createChatbox() {
     input.value = "";
 
     try {
-      const reply = await callOllama(text);
-      showWaifuBubble(reply);
+      setStatus(true);
+      showWaifuBubble("...", false);
+      await callOllamaStream(text, (partial, isFinal) => {
+        showWaifuBubble(partial || "…", isFinal);
+      });
+      setStatus(true);
     } catch (err) {
-      showWaifuBubble("聊天助手魂跑了 有需要可致信");
+      setStatus(false);
+      try {
+        const reply = await callOllama(text);
+        showWaifuBubble(reply, true);
+        setStatus(true);
+      } catch {
+        showWaifuBubble("聊天助手魂跑了 有需要可致信", true);
+      }
     }
   });
 
-  showWaifuBubble("嗨，我是 Epoch聊天助手。你想聊什麼？");
+  showWaifuBubble("嗨，我是 Epoch聊天助手。你想聊什麼？", true);
+  checkOnline();
 }
 
 window.addEventListener("DOMContentLoaded", createChatbox);
@@ -90,6 +173,6 @@ window.addEventListener("resize", () => {
   const bubble = document.getElementById("waifu-head-bubble");
   if (bubble && bubble.textContent) {
     const text = bubble.textContent;
-    showWaifuBubble(text);
+    showWaifuBubble(text, true);
   }
 });
