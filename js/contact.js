@@ -39,7 +39,7 @@
       }
 
       status.className = "subtitle status-ok";
-      status.textContent = "已成功發送到 aiyu@epoch-shop.com";
+      status.textContent = "發送成功 請注意回覆訊息 沒收到訊息請檢查垃圾郵件";
       form.reset();
     } catch (err) {
       status.className = "subtitle status-error";
