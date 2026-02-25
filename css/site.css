@@ -384,6 +384,39 @@ textarea {
   transform: translateZ(0);
 }
 
+.assistant-toggle {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 11000;
+  background: linear-gradient(135deg, #17b176, #0f8b5c);
+  color: #e9fff5;
+  border: 1px solid rgba(44, 255, 124, 0.55);
+  border-radius: 999px;
+  padding: 0.7rem 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.assistant-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.45);
+}
+
+.assistant-toggle:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
+}
+
+body:not(.assistant-open) .waifu,
+body:not(.assistant-open) .waifu-chatbox,
+body:not(.assistant-open) #waifu-head-bubble {
+  display: none !important;
+}
+
 .waifu-tool {
   display: none !important;
 }

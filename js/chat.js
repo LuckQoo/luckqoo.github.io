@@ -167,7 +167,18 @@ function createChatbox() {
   checkOnline();
 }
 
-window.addEventListener("DOMContentLoaded", createChatbox);
+window.ensureChatbox = function () {
+  createChatbox();
+};
+
+const shouldAutoInit = window.CHAT_AUTO_INIT ?? false;
+
+window.addEventListener("DOMContentLoaded", () => {
+  if (shouldAutoInit) {
+    createChatbox();
+  }
+});
+
 window.addEventListener("resize", () => {
   const bubble = document.getElementById("waifu-head-bubble");
   if (bubble && bubble.textContent) {
