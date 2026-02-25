@@ -3,17 +3,29 @@
   window.location.hostname === "127.0.0.1" ||
   window.location.protocol === "file:";
 
-const CHAT_ENDPOINT =
-  window.EPOCH_CHAT_ENDPOINT ||
-  (isLocal
-    ? "http://127.0.0.1:8787/api/chat"
-    : "https://api.epoch-shop.shop/api/chat");
-const CHAT_STREAM_ENDPOINT =
-  window.EPOCH_CHAT_STREAM_ENDPOINT ||
-  (isLocal
-    ? "http://127.0.0.1:8787/api/chat-stream"
-    : "https://api.epoch-shop.shop/api/chat-stream");
-const CHAT_MODEL = window.EPOCH_CHAT_MODEL || "epochGPT:latest";
+const PROD_FALLBACK = "https://api.epoch-shop.shop";
+const API_BASE = isLocal
+  ? "http://127.0.0.1:8790"
+  : window.EPOCH_CHAT_BASE || window.location.origin || PROD_FALLBACK;
+
+const CHAT_ENDPOINT = window.EPOCH_CHAT_ENDPOINT || `${API_BASE}/api/chat`;
+const CHAT_STREAM_ENDPOINT = window.EPOCH_CHAT_STREAM_ENDPOINT || `${API_BASE}/api/chat-stream`;
+const CHAT_MODEL = window.EPOCH_CHAT_MODEL || "qwen2.5:latest";
+const SESSION_KEY = "waifu_session_id";
+
+function getSessionId() {
+  try {
+    let id = localStorage.getItem(SESSION_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(SESSION_KEY, id);
+    }
+    return id;
+  } catch {
+    // fallback for private mode
+    return Math.random().toString(36).slice(2);
+  }
+}
 
 function getStatusEl() {
   return document.getElementById("waifu-chat-status");
@@ -65,7 +77,9 @@ async function callOllama(prompt) {
     body: JSON.stringify({
       model: CHAT_MODEL,
       message: prompt,
-      stream: false
+      stream: false,
+      sessionId: getSessionId(),
+      enableSearch: true
     })
   });
 
@@ -84,7 +98,9 @@ async function callOllamaStream(prompt, onUpdate) {
     body: JSON.stringify({
       model: CHAT_MODEL,
       message: prompt,
-      stream: true
+      stream: true,
+      sessionId: getSessionId(),
+      enableSearch: true
     })
   });
 
