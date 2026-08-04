@@ -5,6 +5,11 @@ import https from "https";
 import { URL, fileURLToPath } from "url";
 import fs from "fs";
 import path from "path";
+import cookieParser from "cookie-parser";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import Database from "better-sqlite3";
+import Stripe from "stripe";
 
 // In-memory short-term session storage for chat history
 const sessions = new Map();
@@ -20,19 +25,213 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "epochGPT:latest";
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 const SERPAPI_KEY = process.env.SERPAPI_KEY || "";
 
+const JWT_SECRET = process.env.JWT_SECRET || "";
+const COOKIE_NAME = "epoch_session";
+const COOKIE_SECURE = process.env.NODE_ENV === "production";
+const SUBSCRIPTION_PRICE_USD = 200;
+const APP_URL = process.env.APP_URL || "https://epoch-shop.shop";
+
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
+const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
+
+if (!JWT_SECRET) {
+  console.warn("WARNING: JWT_SECRET is not set. Set it in .env before going to production.");
+}
+
+const db = new Database(path.join(__dirname, "data.db"));
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    stripe_customer_id TEXT,
+    stripe_subscription_id TEXT,
+    subscription_status TEXT NOT NULL DEFAULT 'inactive',
+    created_at TEXT DEFAULT (datetime('now'))
+  )
+`);
+
 const MAX_CHARS = 360; // allow a bit longer answers so細節不會被截掉
 const MAX_HISTORY_TURNS = 10;
 const SEARCH_RESULTS = 3;
 
+// Stripe webhook needs the raw body for signature verification, so it must be
+// registered before the global express.json() body parser below.
+app.post("/api/billing/webhook", express.raw({ type: "application/json" }), (req, res) => {
+  if (!stripe || !STRIPE_WEBHOOK_SECRET) {
+    return res.status(501).json({ error: "stripe_not_configured" });
+  }
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, req.headers["stripe-signature"], STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    return res.status(400).send(`Webhook signature verification failed: ${err.message}`);
+  }
+
+  try {
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object;
+        const userId = Number(session.client_reference_id);
+        if (userId) {
+          db.prepare(
+            "UPDATE users SET stripe_customer_id = ?, stripe_subscription_id = ?, subscription_status = 'active' WHERE id = ?"
+          ).run(session.customer, session.subscription, userId);
+        }
+        break;
+      }
+      case "customer.subscription.updated":
+      case "customer.subscription.deleted": {
+        const sub = event.data.object;
+        const status = sub.status === "active" || sub.status === "trialing" ? "active" : sub.status;
+        db.prepare("UPDATE users SET subscription_status = ? WHERE stripe_customer_id = ?").run(
+          status,
+          sub.customer
+        );
+        break;
+      }
+      default:
+        break;
+    }
+  } catch (err) {
+    console.error("webhook handling error", err);
+  }
+
+  res.json({ received: true });
+});
+
 app.use(express.json({ limit: "1mb" }));
+app.use(cookieParser());
 app.use(
   cors({
     origin: CORS_ORIGIN === "*" ? true : CORS_ORIGIN.split(",").map((s) => s.trim()),
-    methods: ["POST", "OPTIONS"],
+    credentials: true,
+    methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Accept"],
     maxAge: 86400
   })
 );
+
+function signSession(user) {
+  return jwt.sign({ uid: user.id }, JWT_SECRET, { expiresIn: "30d" });
+}
+
+function setSessionCookie(res, user) {
+  res.cookie(COOKIE_NAME, signSession(user), {
+    httpOnly: true,
+    secure: COOKIE_SECURE,
+    sameSite: "lax",
+    maxAge: 30 * 24 * 60 * 60 * 1000
+  });
+}
+
+function publicUser(user) {
+  return { id: user.id, email: user.email, username: user.username, subscriptionStatus: user.subscription_status };
+}
+
+function requireAuth(req, res, next) {
+  const token = req.cookies?.[COOKIE_NAME];
+  if (!token) return res.status(401).json({ error: "not_authenticated" });
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = db.prepare("SELECT * FROM users WHERE id = ?").get(payload.uid);
+    if (!user) return res.status(401).json({ error: "not_authenticated" });
+    req.user = user;
+    next();
+  } catch {
+    return res.status(401).json({ error: "not_authenticated" });
+  }
+}
+
+function requireActiveSubscription(req, res, next) {
+  if (req.user.subscription_status !== "active") {
+    return res.status(402).json({ error: "subscription_required" });
+  }
+  next();
+}
+
+app.post("/api/auth/register", (req, res) => {
+  const { email, username, password } = req.body || {};
+  if (!email || !username || !password || password.length < 8) {
+    return res.status(400).json({ error: "invalid_input", details: "email/username required, password >= 8 chars" });
+  }
+  const existing = db.prepare("SELECT id FROM users WHERE email = ? OR username = ?").get(email, username);
+  if (existing) {
+    return res.status(409).json({ error: "user_exists" });
+  }
+  const passwordHash = bcrypt.hashSync(password, 10);
+  const info = db
+    .prepare("INSERT INTO users (email, username, password_hash) VALUES (?, ?, ?)")
+    .run(email, username, passwordHash);
+  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(info.lastInsertRowid);
+  setSessionCookie(res, user);
+  res.json({ user: publicUser(user) });
+});
+
+app.post("/api/auth/login", (req, res) => {
+  const { username, password } = req.body || {};
+  if (!username || !password) return res.status(400).json({ error: "invalid_input" });
+  const user = db.prepare("SELECT * FROM users WHERE username = ? OR email = ?").get(username, username);
+  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    return res.status(401).json({ error: "invalid_credentials" });
+  }
+  setSessionCookie(res, user);
+  res.json({ user: publicUser(user) });
+});
+
+app.post("/api/auth/logout", (_req, res) => {
+  res.clearCookie(COOKIE_NAME);
+  res.json({ ok: true });
+});
+
+app.get("/api/auth/me", requireAuth, (req, res) => {
+  res.json({ user: publicUser(req.user) });
+});
+
+app.post("/api/billing/create-checkout-session", requireAuth, async (req, res) => {
+  if (!stripe) return res.status(501).json({ error: "stripe_not_configured" });
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer_email: req.user.stripe_customer_id ? undefined : req.user.email,
+      customer: req.user.stripe_customer_id || undefined,
+      client_reference_id: String(req.user.id),
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            unit_amount: SUBSCRIPTION_PRICE_USD * 100,
+            recurring: { interval: "month" },
+            product_data: { name: "Epoch AI Chat 月訂閱" }
+          },
+          quantity: 1
+        }
+      ],
+      success_url: `${APP_URL}/menu/ai-chat.html?checkout=success`,
+      cancel_url: `${APP_URL}/menu/ai-chat.html?checkout=cancelled`
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    res.status(502).json({ error: "stripe_error", details: err.message });
+  }
+});
+
+app.post("/api/billing/create-portal-session", requireAuth, async (req, res) => {
+  if (!stripe) return res.status(501).json({ error: "stripe_not_configured" });
+  if (!req.user.stripe_customer_id) return res.status(400).json({ error: "no_subscription" });
+  try {
+    const portal = await stripe.billingPortal.sessions.create({
+      customer: req.user.stripe_customer_id,
+      return_url: `${APP_URL}/menu/ai-chat.html`
+    });
+    res.json({ url: portal.url });
+  } catch (err) {
+    res.status(502).json({ error: "stripe_error", details: err.message });
+  }
+});
 
 app.get("/healthz", (_req, res) => {
   res.json({ ok: true });
@@ -287,7 +486,7 @@ function formatSearchResults(results) {
     .slice(0, 1200);
 }
 
-app.post("/api/chat", async (req, res) => {
+app.post("/api/chat", requireAuth, requireActiveSubscription, async (req, res) => {
   const message = getPrompt(req.body);
   if (!message) {
     return res.status(400).json({ error: "message is required" });
@@ -334,7 +533,7 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-app.post("/api/chat-stream", async (req, res) => {
+app.post("/api/chat-stream", requireAuth, requireActiveSubscription, async (req, res) => {
   const message = getPrompt(req.body);
   if (!message) {
     return res.status(400).json({ error: "message is required" });
@@ -378,7 +577,7 @@ app.post("/api/chat-stream", async (req, res) => {
   );
 });
 
-app.post("/api/generate", async (req, res) => {
+app.post("/api/generate", requireAuth, requireActiveSubscription, async (req, res) => {
   const message = getPrompt(req.body);
   if (!message) {
     return res.status(400).json({ error: "prompt is required" });

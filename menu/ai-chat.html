@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Chat | epoch shop</title>
+  <link rel="icon" href="/eshop.ico" type="image/x-icon" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/site.css" />
+  <style>
+    .ai-chat-layout {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+    .ai-chat-layout .waifu {
+      position: relative !important;
+      left: auto !important;
+      right: auto !important;
+      bottom: auto !important;
+    }
+    .auth-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .auth-tabs button.active {
+      background: linear-gradient(90deg, #21d46a, #74ffab);
+      color: #04260f;
+    }
+    .auth-form {
+      display: grid;
+      gap: 0.6rem;
+      max-width: 360px;
+    }
+    .auth-form input {
+      width: 100%;
+    }
+    .hidden {
+      display: none !important;
+    }
+    @media (max-width: 860px) {
+      .ai-chat-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="assistant-open">
+  <canvas id="matrix"></canvas>
+  <div class="bg-mask"></div>
+
+  <header class="site-header">
+    <nav class="nav-wrap">
+      <a class="brand-link" href="../index.html">EPOCH SHOP</a>
+      <a class="menu-btn" href="../index.html">首頁</a>
+      <a class="menu-btn" href="products.html">服務項目</a>
+      <a class="menu-btn" href="hosting.html">虛擬主機</a>
+      <a class="menu-btn active" href="ai-chat.html">AI Chat</a>
+      <a class="menu-btn" href="cart.html">購物車（<span data-cart-count>0</span>）</a>
+      <a class="menu-btn" href="checkout.html">結帳</a>
+      <a class="menu-btn" href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">生活小品</a>
+      <a class="menu-btn" href="contact.html">聯絡我們</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1 class="cyber-title">AI Chat</h1>
+      <p class="subtitle">訂閱制 AI 助理，登入並訂閱後即可開始對話。</p>
+    </section>
+
+    <section id="auth-section" class="card">
+      <div class="auth-tabs">
+        <button type="button" id="tab-login" class="ghost active">登入</button>
+        <button type="button" id="tab-register" class="ghost">註冊</button>
+      </div>
+
+      <form id="login-form" class="auth-form">
+        <input type="text" id="login-username" placeholder="使用者名稱或信箱" required autocomplete="username" />
+        <input type="password" id="login-password" placeholder="密碼" required autocomplete="current-password" />
+        <button type="submit" class="primary">登入</button>
+        <p id="login-error" class="subtitle hidden"></p>
+      </form>
+
+      <form id="register-form" class="auth-form hidden">
+        <input type="email" id="register-email" placeholder="信箱" required autocomplete="email" />
+        <input type="text" id="register-username" placeholder="使用者名稱" required autocomplete="username" />
+        <input type="password" id="register-password" placeholder="密碼（至少 8 碼）" minlength="8" required autocomplete="new-password" />
+        <button type="submit" class="primary">註冊</button>
+        <p id="register-error" class="subtitle hidden"></p>
+      </form>
+    </section>
+
+    <section id="subscribe-section" class="card hidden">
+      <p>已登入：<span id="account-label"></span></p>
+      <p class="subtitle">AI Chat 為訂閱制服務，每月 <strong>$200</strong>，訂閱後即可開始與助理對話。</p>
+      <div class="actions">
+        <button id="subscribe-btn" class="primary">訂閱 $200/月</button>
+        <button id="logout-btn-1" class="ghost">登出</button>
+      </div>
+      <p id="subscribe-notice" class="notice hidden"></p>
+    </section>
+
+    <section id="chat-section" class="hidden">
+      <div class="actions" style="margin-bottom: 1rem;">
+        <span class="subtitle">已登入：<span id="account-label-2"></span>（訂閱中）</span>
+        <button id="manage-billing-btn" class="ghost">管理訂閱</button>
+        <button id="logout-btn-2" class="ghost">登出</button>
+      </div>
+      <div class="ai-chat-layout">
+        <div class="waifu">
+          <canvas id="live2d-canvas" class="live2d"></canvas>
+        </div>
+        <div class="chat-shell">
+          <div id="chat-log" class="chat-log"></div>
+          <div class="chat-input-row">
+            <input type="text" id="chat-input" placeholder="輸入訊息..." />
+            <button id="chat-send" class="primary">送出</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">© <span id="year"></span> EPOCH SHOP<br />Business Address: 30 N Gould St Ste R, Sheridan, WY 82801, United States<br />Contact Phone: +1 (307) 204-5345</footer>
+
+  <script src="../js/matrix.js"></script>
+  <script src="../js/site.js"></script>
+
+  <script>
+    const isLocal =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.protocol === "file:";
+    const API_BASE = isLocal ? "http://127.0.0.1:8787" : (window.EPOCH_CHAT_BASE || "https://api.epoch-shop.shop");
+    const SESSION_KEY = "waifu_session_id";
+
+    function getSessionId() {
+      try {
+        let id = localStorage.getItem(SESSION_KEY);
+        if (!id) {
+          id = crypto.randomUUID();
+          localStorage.setItem(SESSION_KEY, id);
+        }
+        return id;
+      } catch {
+        return Math.random().toString(36).slice(2);
+      }
+    }
+
+    async function api(path, options = {}) {
+      const res = await fetch(`${API_BASE}${path}`, {
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        ...options
+      });
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
+      return { ok: res.ok, status: res.status, data };
+    }
+
+    function show(id) {
+      document.getElementById(id).classList.remove("hidden");
+    }
+    function hide(id) {
+      document.getElementById(id).classList.add("hidden");
+    }
+
+    let live2dLoaded = false;
+    function ensureLive2d() {
+      if (live2dLoaded) return;
+      live2dLoaded = true;
+      const scripts = [
+        "../assets/vendor/pixi.min.js",
+        "../assets/vendor/live2dcubismcore.min.js",
+        "../assets/vendor/pixi-live2d-cubism4.min.js",
+        "../assets/vendor/pixi-live2d-display.min.js",
+        "../js/live2d-boy.js"
+      ];
+      let i = 0;
+      function loadNext() {
+        if (i >= scripts.length) return;
+        const s = document.createElement("script");
+        s.src = scripts[i++];
+        s.onload = loadNext;
+        document.body.appendChild(s);
+      }
+      loadNext();
+    }
+
+    async function refreshState(params = new URLSearchParams()) {
+      const { ok, data } = await api("/api/auth/me");
+      hide("auth-section");
+      hide("subscribe-section");
+      hide("chat-section");
+
+      if (!ok) {
+        show("auth-section");
+        return;
+      }
+
+      const user = data.user;
+      if (user.subscriptionStatus === "active") {
+        document.getElementById("account-label-2").textContent = user.username;
+        show("chat-section");
+        ensureLive2d();
+      } else {
+        document.getElementById("account-label").textContent = user.username;
+        show("subscribe-section");
+        if (params.get("checkout") === "success") {
+          const notice = document.getElementById("subscribe-notice");
+          notice.textContent = "付款處理中，訂閱狀態確認後即可開始使用，可稍後重新整理本頁。";
+          notice.classList.remove("hidden");
+        }
+      }
+    }
+
+    document.getElementById("tab-login").addEventListener("click", () => {
+      document.getElementById("tab-login").classList.add("active");
+      document.getElementById("tab-register").classList.remove("active");
+      show("login-form");
+      hide("register-form");
+    });
+    document.getElementById("tab-register").addEventListener("click", () => {
+      document.getElementById("tab-register").classList.add("active");
+      document.getElementById("tab-login").classList.remove("active");
+      show("register-form");
+      hide("login-form");
+    });
+
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("login-username").value.trim();
+      const password = document.getElementById("login-password").value;
+      const { ok, data } = await api("/api/auth/login", { method: "POST", body: JSON.stringify({ username, password }) });
+      const err = document.getElementById("login-error");
+      if (!ok) {
+        err.textContent = data.error === "invalid_credentials" ? "帳號或密碼錯誤" : "登入失敗";
+        err.classList.remove("hidden");
+        return;
+      }
+      err.classList.add("hidden");
+      refreshState();
+    });
+
+    document.getElementById("register-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("register-email").value.trim();
+      const username = document.getElementById("register-username").value.trim();
+      const password = document.getElementById("register-password").value;
+      const { ok, data } = await api("/api/auth/register", {
+        method: "POST",
+        body: JSON.stringify({ email, username, password })
+      });
+      const err = document.getElementById("register-error");
+      if (!ok) {
+        err.textContent = data.error === "user_exists" ? "信箱或使用者名稱已被使用" : "註冊失敗，請確認資料格式";
+        err.classList.remove("hidden");
+        return;
+      }
+      err.classList.add("hidden");
+      refreshState();
+    });
+
+    document.getElementById("subscribe-btn").addEventListener("click", async () => {
+      const { ok, data } = await api("/api/billing/create-checkout-session", { method: "POST" });
+      if (ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("目前無法建立訂閱付款頁面，請稍後再試。");
+      }
+    });
+
+    document.getElementById("manage-billing-btn").addEventListener("click", async () => {
+      const { ok, data } = await api("/api/billing/create-portal-session", { method: "POST" });
+      if (ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("目前無法開啟訂閱管理頁面，請稍後再試。");
+      }
+    });
+
+    async function doLogout() {
+      await api("/api/auth/logout", { method: "POST" });
+      refreshState();
+    }
+    document.getElementById("logout-btn-1").addEventListener("click", doLogout);
+    document.getElementById("logout-btn-2").addEventListener("click", doLogout);
+
+    function appendMessage(role, text) {
+      const log = document.getElementById("chat-log");
+      const el = document.createElement("div");
+      el.className = `msg ${role}`;
+      el.textContent = text;
+      log.appendChild(el);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function sendChat() {
+      const input = document.getElementById("chat-input");
+      const message = input.value.trim();
+      if (!message) return;
+      input.value = "";
+      appendMessage("user", message);
+
+      const { ok, status, data } = await api("/api/chat", {
+        method: "POST",
+        body: JSON.stringify({ message, sessionId: getSessionId(), enableSearch: true })
+      });
+
+      if (!ok) {
+        if (status === 401 || status === 402) {
+          appendMessage("bot", "訂閱狀態異常，請重新整理頁面確認登入/訂閱狀態。");
+          refreshState();
+        } else {
+          appendMessage("bot", "抱歉，暫時無法回應，請稍後再試。");
+        }
+        return;
+      }
+      appendMessage("bot", data.reply || "我收到訊息了，但暫時沒有內容。");
+    }
+
+    document.getElementById("chat-send").addEventListener("click", sendChat);
+    document.getElementById("chat-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendChat();
+    });
+
+    refreshState(new URLSearchParams(window.location.search));
+  </script>
+</body>
+</html>
