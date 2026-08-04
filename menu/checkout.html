@@ -49,7 +49,7 @@
   <script>
     const STRIPE_PAYMENT_LINK = "PASTE_YOUR_STRIPE_PAYMENT_LINK_HERE";
 
-    document.getElementById("checkout-total").textContent = `應付金額：NT$ ${window.cartApi.cartTotal()}`;
+    document.getElementById("checkout-total").textContent = `應付金額：$${window.cartApi.cartTotal()}`;
     document.getElementById("pay-btn").addEventListener("click", () => {
       if (!STRIPE_PAYMENT_LINK || STRIPE_PAYMENT_LINK.includes("PASTE_YOUR")) {
         alert("請先在 menu/checkout.html 設定 Stripe 付款連結");

@@ -31,7 +31,7 @@
     <section class="hero">
       <h1>購物車</h1>
       <div id="cart-list" class="card"></div>
-      <p class="price" id="cart-total">總計：NT$ 0</p>
+      <p class="price" id="cart-total">總計：$0</p>
       <div class="actions">
         <button class="ghost" id="clear-cart">清空購物車</button>
         <a class="button primary" href="checkout.html">前往結帳</a>
@@ -61,12 +61,12 @@
         list.innerHTML = items.map((item) => `
           <div class="cart-row">
             <div>${item.name} x ${item.qty}</div>
-            <div>NT$ ${item.price * item.qty}</div>
+            <div>$${item.price * item.qty}</div>
             <button class="ghost" data-remove="${item.id}">移除</button>
           </div>
         `).join("");
       }
-      document.getElementById("cart-total").textContent = `總計：NT$ ${window.cartApi.cartTotal()}`;
+      document.getElementById("cart-total").textContent = `總計：$${window.cartApi.cartTotal()}`;
 
       document.querySelectorAll("[data-remove]").forEach((btn) => {
         btn.onclick = () => {
