@@ -6,7 +6,7 @@
   <title>服務項目 | epoch shop</title>
   <link rel="icon" href="/eshop.ico" type="image/x-icon" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../css/site.css" />
+  <link rel="stylesheet" href="../css/site.css?v=2" />
 </head>
 <body>
   <canvas id="matrix"></canvas>
@@ -19,8 +19,6 @@
       <a class="menu-btn active" href="products.html">服務項目</a>
       <a class="menu-btn" href="hosting.html">虛擬主機</a>
       <a class="menu-btn" href="ai-chat.html">AI Chat</a>
-      <a class="menu-btn" href="cart.html">購物車（<span data-cart-count>0</span>）</a>
-      <a class="menu-btn" href="checkout.html">結帳</a>
       <a class="menu-btn" href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">生活小品</a>
       </div>
       <a class="menu-btn" href="contact.html">聯絡我們</a>
@@ -40,34 +38,36 @@
         <h3>車輛模型</h3>
         <p class="subtitle">細膩外觀與內裝、優化 LOD，兼顧效能與視覺。</p>
         <p class="price">$115</p>
-        <button class="primary" data-id="vehicle-model" data-name="車輛模型" data-price="115">加入購物車</button>
+        <script async src="https://js.stripe.com/v3/buy-button.js"></script>
+        <stripe-buy-button
+          buy-button-id="buy_btn_1U19HuPVJU6AVrVN9uBzf81i"
+          publishable-key="pk_live_51U0QhZPVJU6AVrVNMYeBI2ZkqN8y1Tz3YZmpFwMgHz5kf87NUquXFKL2jaOz51LhME1wpiX2iDPoRBJKMhak0uMS00gIZIC5IG"
+        >
+        </stripe-buy-button>
       </article>
       <article class="card">
         <img class="card-image" src="../css/images/service-map-building.png?v=2" alt="建築 / 地圖" loading="lazy" />
         <h3>建築 / 地圖</h3>
         <p class="subtitle">場景、室內外建築與陳設，營造沉浸式城市風格。</p>
         <p class="price">$135</p>
-        <button class="primary" data-id="map-model" data-name="建築地圖資源" data-price="135">加入購物車</button>
+        <button class="primary" data-id="map-model" data-name="建築地圖資源" data-price="135">購買 &amp; Buy</button>
       </article>
       <article class="card">
         <img class="card-image" src="../css/images/service-npc-skin.png?v=2" alt="人物 / 服裝" loading="lazy" />
         <h3>人物 / 服裝</h3>
         <p class="subtitle">角色外觀、配件與服飾，支援多套件搭配與調整。</p>
         <p class="price">$90</p>
-        <button class="primary" data-id="npc-skin" data-name="人物服裝資源" data-price="90">加入購物車</button>
+        <button class="primary" data-id="npc-skin" data-name="人物服裝資源" data-price="90">購買 &amp; Buy</button>
       </article>
       <article class="card">
         <img class="card-image" src="../css/images/service-code.png?v=2" alt="代碼撰寫" loading="lazy" />
         <h3>代碼撰寫</h3>
         <p class="subtitle">網站前後端、腳本自動化、Bot、API 串接與效能優化。</p>
         <p class="price">$259 起</p>
-        <button class="primary" data-id="code-service" data-name="代碼撰寫服務" data-price="259">加入購物車</button>
+        <button class="primary" data-id="code-service" data-name="代碼撰寫服務" data-price="259">購買 &amp; Buy</button>
       </article>
     </section>
 
-    <div class="actions" style="margin-top: 1rem;">
-      <a class="button ghost" href="cart.html">前往購物車</a>
-    </div>
   </main>
 
     <footer class="site-footer">© <span id="year"></span> EPOCH SHOP<br />Business Address: 30 N Gould St Ste R, Sheridan, WY 82801, United States<br />Contact Phone: +1 (307) 204-5345</footer>
@@ -83,7 +83,7 @@
           name: btn.dataset.name,
           price: Number(btn.dataset.price)
         });
-        btn.textContent = "已加入";
+        btn.textContent = "已送出";
       });
     });
   </script>
