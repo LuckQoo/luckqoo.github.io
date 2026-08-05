@@ -47,7 +47,7 @@
       setTimeout(() => {
         form.submit();
         status.className = "subtitle status-ok";
-        status.textContent = "已改用表單直送。若仍收不到信，請先到收件箱/垃圾信找 FormSubmit 啟用信並完成驗證。";
+        status.textContent = "感謝您，我們會盡快回復您的訊息。";
       }, 250);
     }
   });

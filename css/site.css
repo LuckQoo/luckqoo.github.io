@@ -133,6 +133,17 @@ body {
   background: linear-gradient(90deg, var(--accent), #67ff9f);
 }
 
+.coffee-btn {
+  display: inline-flex;
+  align-items: center;
+}
+
+.coffee-btn img {
+  height: 36px;
+  width: auto;
+  display: block;
+}
+
 .menu-dropdown {
   position: relative;
 }
