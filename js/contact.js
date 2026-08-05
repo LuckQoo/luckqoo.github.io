@@ -21,7 +21,7 @@
     payload.append("_captcha", "false");
 
     try {
-      const res = await fetch("https://formsubmit.co/ajax/aiyu@epoch-shop.com", {
+      const res = await fetch("https://formsubmit.co/ajax/yukine@diary-city.com", {
         method: "POST",
         body: payload,
         headers: { Accept: "application/json" }

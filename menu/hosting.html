@@ -31,6 +31,7 @@
       <p class="subtitle">針對 私人伺服器 與遊戲社群調校，穩定、低延遲、即時支援。</p>
     </section>
 
+    <script async src="https://js.stripe.com/v3/buy-button.js"></script>
     <section class="plan-grid" style="margin-top: 1rem;">
       <article class="card plan">
         <img class="card-image" src="../css/images/hosting-e-series.png?v=2" alt="E 系列主機" loading="lazy" />
@@ -45,7 +46,11 @@
           <li>DDoS 防護</li>
           <li>基礎管理支援</li>
         </ul>
-        <button class="primary" data-id="host-e-series" data-name="E 系列主機" data-price="160">索取方案</button>
+        <stripe-buy-button
+          buy-button-id="buy_btn_1U19aTPVJU6AVrVNEsZ1hJgO"
+          publishable-key="pk_live_51U0QhZPVJU6AVrVNMYeBI2ZkqN8y1Tz3YZmpFwMgHz5kf87NUquXFKL2jaOz51LhME1wpiX2iDPoRBJKMhak0uMS00gIZIC5IG"
+        >
+        </stripe-buy-button>
       </article>
       <article class="card plan">
         <span class="hot-tag">熱門</span>
@@ -61,7 +66,11 @@
           <li>全球網路</li>
           <li>進階監控</li>
         </ul>
-        <button class="primary" data-id="host-n-series" data-name="N 系列主機" data-price="645">立即聯繫</button>
+        <stripe-buy-button
+          buy-button-id="buy_btn_1U19ZuPVJU6AVrVNpzxoNHxM"
+          publishable-key="pk_live_51U0QhZPVJU6AVrVNMYeBI2ZkqN8y1Tz3YZmpFwMgHz5kf87NUquXFKL2jaOz51LhME1wpiX2iDPoRBJKMhak0uMS00gIZIC5IG"
+        >
+        </stripe-buy-button>
       </article>
       <article class="card plan">
         <img class="card-image" src="../css/images/hosting-custom.png?v=2" alt="自訂主機服務" loading="lazy" />
@@ -74,7 +83,7 @@
           <li>維運監控與基本代維</li>
           <li>網域/郵件代設定（選配）</li>
         </ul>
-        <button class="primary" data-id="host-custom" data-name="自訂主機服務" data-price="0">討論需求</button>
+        <a class="button primary" href="contact.html">討論需求</a>
       </article>
     </section>
 
@@ -103,19 +112,6 @@
 
   <script src="../js/matrix.js"></script>
   <script src="../js/site.js"></script>
-  <script src="../js/cart.js"></script>
-  <script>
-    document.querySelectorAll("button[data-id]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        window.cartApi.addToCart({
-          id: btn.dataset.id,
-          name: btn.dataset.name,
-          price: Number(btn.dataset.price)
-        });
-        btn.textContent = "已加入";
-      });
-    });
-  </script>
 
   <script src="../assets/jquery.min.js?v=3.3.1"></script>
   <script src="../assets/jquery-ui.min.js?v=1.12.1"></script>

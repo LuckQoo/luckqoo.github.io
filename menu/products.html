@@ -32,13 +32,13 @@
     </section>
 
     <h2 class="section-head">伺服器模型精選</h2>
+    <script async src="https://js.stripe.com/v3/buy-button.js"></script>
     <section class="grid products">
       <article class="card">
         <img class="card-image" src="../css/images/service-vehicle-model.png?v=2" alt="車輛模型" loading="lazy" />
         <h3>車輛模型</h3>
         <p class="subtitle">細膩外觀與內裝、優化 LOD，兼顧效能與視覺。</p>
         <p class="price">$115</p>
-        <script async src="https://js.stripe.com/v3/buy-button.js"></script>
         <stripe-buy-button
           buy-button-id="buy_btn_1U19HuPVJU6AVrVN9uBzf81i"
           publishable-key="pk_live_51U0QhZPVJU6AVrVNMYeBI2ZkqN8y1Tz3YZmpFwMgHz5kf87NUquXFKL2jaOz51LhME1wpiX2iDPoRBJKMhak0uMS00gIZIC5IG"
@@ -50,21 +50,33 @@
         <h3>建築 / 地圖</h3>
         <p class="subtitle">場景、室內外建築與陳設，營造沉浸式城市風格。</p>
         <p class="price">$135</p>
-        <button class="primary" data-id="map-model" data-name="建築地圖資源" data-price="135">購買 &amp; Buy</button>
+        <stripe-buy-button
+          buy-button-id="buy_btn_1U19BlPVJU6AVrVN2SaHg5qs"
+          publishable-key="pk_live_51U0QhZPVJU6AVrVNMYeBI2ZkqN8y1Tz3YZmpFwMgHz5kf87NUquXFKL2jaOz51LhME1wpiX2iDPoRBJKMhak0uMS00gIZIC5IG"
+        >
+        </stripe-buy-button>
       </article>
       <article class="card">
         <img class="card-image" src="../css/images/service-npc-skin.png?v=2" alt="人物 / 服裝" loading="lazy" />
         <h3>人物 / 服裝</h3>
         <p class="subtitle">角色外觀、配件與服飾，支援多套件搭配與調整。</p>
         <p class="price">$90</p>
-        <button class="primary" data-id="npc-skin" data-name="人物服裝資源" data-price="90">購買 &amp; Buy</button>
+        <stripe-buy-button
+          buy-button-id="buy_btn_1U19Y7PVJU6AVrVNFl2ODJjP"
+          publishable-key="pk_live_51U0QhZPVJU6AVrVNMYeBI2ZkqN8y1Tz3YZmpFwMgHz5kf87NUquXFKL2jaOz51LhME1wpiX2iDPoRBJKMhak0uMS00gIZIC5IG"
+        >
+        </stripe-buy-button>
       </article>
       <article class="card">
         <img class="card-image" src="../css/images/service-code.png?v=2" alt="代碼撰寫" loading="lazy" />
         <h3>代碼撰寫</h3>
         <p class="subtitle">網站前後端、腳本自動化、Bot、API 串接與效能優化。</p>
         <p class="price">$259 起</p>
-        <button class="primary" data-id="code-service" data-name="代碼撰寫服務" data-price="259">購買 &amp; Buy</button>
+        <stripe-buy-button
+          buy-button-id="buy_btn_1U19YnPVJU6AVrVNQqFKMf1Z"
+          publishable-key="pk_live_51U0QhZPVJU6AVrVNMYeBI2ZkqN8y1Tz3YZmpFwMgHz5kf87NUquXFKL2jaOz51LhME1wpiX2iDPoRBJKMhak0uMS00gIZIC5IG"
+        >
+        </stripe-buy-button>
       </article>
     </section>
 
@@ -74,19 +86,6 @@
 
   <script src="../js/matrix.js"></script>
   <script src="../js/site.js"></script>
-  <script src="../js/cart.js"></script>
-  <script>
-    document.querySelectorAll("button[data-id]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        window.cartApi.addToCart({
-          id: btn.dataset.id,
-          name: btn.dataset.name,
-          price: Number(btn.dataset.price)
-        });
-        btn.textContent = "已送出";
-      });
-    });
-  </script>
 
   <script src="../assets/jquery.min.js?v=3.3.1"></script>
   <script src="../assets/jquery-ui.min.js?v=1.12.1"></script>
