@@ -32,8 +32,17 @@ const SUBSCRIPTION_PRICE_USD = 200;
 const APP_URL = process.env.APP_URL || "https://epoch-shop.shop";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || "";
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
 const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
+
+// Server-side price list — never trust a price/amount sent from the client.
+const PRODUCTS = {
+  "vehicle-model": { name: "車輛模型", amount: 11500 },
+  "map-building": { name: "建築 / 地圖", amount: 13500 },
+  "npc-skin": { name: "人物 / 服裝", amount: 9000 },
+  "custom-code": { name: "代碼撰寫", amount: 25900 }
+};
 
 if (!JWT_SECRET) {
   console.warn("WARNING: JWT_SECRET is not set. Set it in .env before going to production.");
@@ -73,16 +82,6 @@ app.post("/api/billing/webhook", express.raw({ type: "application/json" }), (req
 
   try {
     switch (event.type) {
-      case "checkout.session.completed": {
-        const session = event.data.object;
-        const userId = Number(session.client_reference_id);
-        if (userId) {
-          db.prepare(
-            "UPDATE users SET stripe_customer_id = ?, stripe_subscription_id = ?, subscription_status = 'active' WHERE id = ?"
-          ).run(session.customer, session.subscription, userId);
-        }
-        break;
-      }
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const sub = event.data.object;
@@ -191,29 +190,81 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
   res.json({ user: publicUser(req.user) });
 });
 
-app.post("/api/billing/create-checkout-session", requireAuth, async (req, res) => {
+app.get("/api/config", (_req, res) => {
+  res.json({ publishableKey: STRIPE_PUBLISHABLE_KEY });
+});
+
+// Creates (or reuses) a Stripe customer + an incomplete subscription, and hands back
+// the PaymentIntent client_secret so the frontend can confirm payment in-page with
+// the Payment Element instead of redirecting to Stripe-hosted Checkout.
+app.post("/api/billing/create-subscription-intent", requireAuth, async (req, res) => {
   if (!stripe) return res.status(501).json({ error: "stripe_not_configured" });
   try {
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      customer_email: req.user.stripe_customer_id ? undefined : req.user.email,
-      customer: req.user.stripe_customer_id || undefined,
-      client_reference_id: String(req.user.id),
-      line_items: [
+    let customerId = req.user.stripe_customer_id;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: req.user.email,
+        metadata: { userId: String(req.user.id) }
+      });
+      customerId = customer.id;
+      db.prepare("UPDATE users SET stripe_customer_id = ? WHERE id = ?").run(customerId, req.user.id);
+    }
+
+    const subscription = await stripe.subscriptions.create({
+      customer: customerId,
+      items: [
         {
           price_data: {
             currency: "usd",
             unit_amount: SUBSCRIPTION_PRICE_USD * 100,
             recurring: { interval: "month" },
             product_data: { name: "Epoch AI Chat 月訂閱" }
-          },
-          quantity: 1
+          }
         }
       ],
-      success_url: `${APP_URL}/menu/ai-chat.html?checkout=success`,
-      cancel_url: `${APP_URL}/menu/ai-chat.html?checkout=cancelled`
+      payment_behavior: "default_incomplete",
+      payment_settings: { save_default_payment_method: "on_subscription" },
+      expand: ["latest_invoice.payment_intent"]
     });
-    res.json({ url: session.url });
+
+    db.prepare("UPDATE users SET stripe_subscription_id = ? WHERE id = ?").run(subscription.id, req.user.id);
+
+    res.json({
+      clientSecret: subscription.latest_invoice.payment_intent.client_secret,
+      subscriptionId: subscription.id
+    });
+  } catch (err) {
+    res.status(502).json({ error: "stripe_error", details: err.message });
+  }
+});
+
+// One-time purchase for the shop. Amount is always derived from the server-side
+// PRODUCTS catalog so a tampered client-side price can never be charged.
+app.post("/api/shop/create-payment-intent", async (req, res) => {
+  if (!stripe) return res.status(501).json({ error: "stripe_not_configured" });
+  const items = Array.isArray(req.body?.items) ? req.body.items : [];
+  if (!items.length) return res.status(400).json({ error: "empty_cart" });
+
+  let amount = 0;
+  const lineItems = [];
+  for (const item of items) {
+    const product = PRODUCTS[item?.id];
+    const qty = Number(item?.qty) || 0;
+    if (!product || qty <= 0) {
+      return res.status(400).json({ error: "invalid_item", details: item?.id });
+    }
+    amount += product.amount * qty;
+    lineItems.push({ id: item.id, name: product.name, qty, unitAmount: product.amount });
+  }
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency: "usd",
+      automatic_payment_methods: { enabled: true },
+      metadata: { items: JSON.stringify(lineItems) }
+    });
+    res.json({ clientSecret: paymentIntent.client_secret, amount });
   } catch (err) {
     res.status(502).json({ error: "stripe_error", details: err.message });
   }

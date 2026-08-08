@@ -6,3 +6,8 @@ yarn-error.log*
 .env
 server/.env
 server/data.db
+
+# Claude Code local tooling
+.agents/
+.claude/
+skills-lock.json
