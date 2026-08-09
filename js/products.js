@@ -5,7 +5,8 @@
       window.cartApi.addToCart({
         id: btn.dataset.id,
         name: btn.dataset.name,
-        price: Number(btn.dataset.price)
+        price: Number(btn.dataset.price),
+        recurring: btn.dataset.recurring === "1"
       });
       btn.textContent = "已加入！";
       btn.disabled = true;

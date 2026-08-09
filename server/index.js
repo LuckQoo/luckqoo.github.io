@@ -65,6 +65,13 @@ const PRODUCTS = {
   "model-edit-ultra": { name: "修改模型 - 極致", amount: 5000 }
 };
 
+// Recurring hosting plans — separate catalog because they check out with
+// mode: "subscription" instead of mode: "payment".
+const HOSTING_PLANS = {
+  "hosting-e": { name: "E 系列主機", amount: 30000 },
+  "hosting-n": { name: "N 系列主機", amount: 60000 }
+};
+
 if (!JWT_SECRET) {
   console.warn("WARNING: JWT_SECRET is not set. Set it in .env before going to production.");
 }
@@ -263,9 +270,12 @@ app.post("/api/billing/create-checkout-session", requireAuth, async (req, res) =
   }
 });
 
-// Creates a Checkout Session (ui_mode: "elements") for a one-time shop purchase.
-// Amount is always derived from the server-side PRODUCTS catalog so a tampered
-// client-side price can never be charged.
+// Creates a Checkout Session (ui_mode: "elements") for a shop purchase — either a
+// one-time cart (mode: "payment") or a hosting subscription cart (mode: "subscription").
+// Amount is always derived from the server-side PRODUCTS/HOSTING_PLANS catalogs so a
+// tampered client-side price can never be charged. Stripe doesn't allow mixing
+// one-time and recurring line items in the same Checkout Session, so a cart with both
+// is rejected and the customer is asked to check out separately.
 app.post("/api/shop/create-checkout-session", async (req, res) => {
   const { stripe } = getStripeContext(req);
   if (!stripe) return res.status(501).json({ error: "stripe_not_configured" });
@@ -273,29 +283,50 @@ app.post("/api/shop/create-checkout-session", async (req, res) => {
   if (!items.length) return res.status(400).json({ error: "empty_cart" });
 
   const lineItems = [];
+  let hasOneTime = false;
+  let hasRecurring = false;
   for (const item of items) {
-    const product = PRODUCTS[item?.id];
     const qty = Number(item?.qty) || 0;
-    if (!product || qty <= 0) {
+    const product = PRODUCTS[item?.id];
+    const plan = HOSTING_PLANS[item?.id];
+    if ((!product && !plan) || qty <= 0) {
       return res.status(400).json({ error: "invalid_item", details: item?.id });
     }
-    lineItems.push({
-      quantity: qty,
-      price_data: {
-        currency: "usd",
-        unit_amount: product.amount,
-        product_data: { name: product.name }
-      }
-    });
+    if (product) {
+      hasOneTime = true;
+      lineItems.push({
+        quantity: qty,
+        price_data: {
+          currency: "usd",
+          unit_amount: product.amount,
+          product_data: { name: product.name }
+        }
+      });
+    } else {
+      hasRecurring = true;
+      lineItems.push({
+        quantity: qty,
+        price_data: {
+          currency: "usd",
+          unit_amount: plan.amount,
+          recurring: { interval: "month" },
+          product_data: { name: plan.name }
+        }
+      });
+    }
+  }
+
+  if (hasOneTime && hasRecurring) {
+    return res.status(400).json({ error: "mixed_cart", details: "一次性商品和訂閱制主機無法一起結帳，請分開購買" });
   }
 
   try {
     const session = await stripe.checkout.sessions.create({
       ui_mode: "elements",
-      mode: "payment",
+      mode: hasRecurring ? "subscription" : "payment",
       line_items: lineItems,
       // Exclude "link" so its inline "save my info" phone/name prompt doesn't show.
-      payment_method_types: ["card", "klarna", "affirm", "cashapp", "amazon_pay", "crypto"],
+      payment_method_types: hasRecurring ? ["card"] : ["card", "klarna", "affirm", "cashapp", "amazon_pay", "crypto"],
       return_url: `${APP_URL}/menu/complete.html?session_id={CHECKOUT_SESSION_ID}`
     });
     res.json({ clientSecret: session.client_secret });

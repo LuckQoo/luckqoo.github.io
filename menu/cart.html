@@ -7,6 +7,7 @@
   <link rel="icon" href="/eshop.ico" type="image/x-icon" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/site.css?v=2" />
+  <style>.hidden { display: none; }</style>
 </head>
 <body>
   <canvas id="matrix"></canvas>
@@ -33,9 +34,12 @@
       <h1>購物車</h1>
       <div id="cart-list" class="card"></div>
       <p class="price" id="cart-total">總計：$0</p>
+      <p id="cart-mixed-warning" class="subtitle hidden" style="color: var(--danger);">
+        購物車裡同時有一次性商品和訂閱制主機，Stripe 沒辦法一次結帳，請先移除其中一種再結帳。
+      </p>
       <div class="actions">
         <button class="ghost" id="clear-cart">清空購物車</button>
-        <a class="button primary" href="checkout.html">前往結帳</a>
+        <a class="button primary" href="checkout.html" id="go-checkout">前往結帳</a>
       </div>
     </section>
   </main>
@@ -55,12 +59,16 @@
         list.innerHTML = items.map((item) => `
           <div class="cart-row">
             <div>${item.name} x ${item.qty}</div>
-            <div>$${item.price * item.qty}</div>
+            <div>$${item.price * item.qty}${item.recurring ? "/月" : ""}</div>
             <button class="ghost" data-remove="${item.id}">移除</button>
           </div>
         `).join("");
       }
       document.getElementById("cart-total").textContent = `總計：$${window.cartApi.cartTotal()}`;
+
+      const mixed = window.cartApi.hasMixedCart();
+      document.getElementById("cart-mixed-warning").classList.toggle("hidden", !mixed);
+      document.getElementById("go-checkout").classList.toggle("hidden", mixed);
 
       document.querySelectorAll("[data-remove]").forEach((btn) => {
         btn.onclick = () => {

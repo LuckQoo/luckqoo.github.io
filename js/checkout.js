@@ -34,13 +34,18 @@
     const el = document.getElementById("checkout-cart-summary");
     if (!el || !cart.length) return;
     el.innerHTML = cart
-      .map((item) => `<div class="cart-row"><div>${item.name} x ${item.qty}</div><div>$${item.price * item.qty}</div></div>`)
+      .map((item) => `<div class="cart-row"><div>${item.name} x ${item.qty}</div><div>$${item.price * item.qty}${item.recurring ? "/月" : ""}</div></div>`)
       .join("");
   }
 
   async function initialize() {
     if (!cart.length) {
       showMessage("購物車是空的，請先到服務項目頁面選購。");
+      submitBtn.disabled = true;
+      return;
+    }
+    if (window.cartApi && window.cartApi.hasMixedCart()) {
+      showMessage("購物車裡同時有一次性商品和訂閱制主機，請回購物車移除其中一種再結帳。");
       submitBtn.disabled = true;
       return;
     }
