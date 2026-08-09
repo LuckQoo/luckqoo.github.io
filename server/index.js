@@ -232,6 +232,9 @@ app.post("/api/billing/create-checkout-session", requireAuth, async (req, res) =
           quantity: 1
         }
       ],
+      // Exclude "link" so its inline "save my info" phone/name prompt doesn't show.
+      // (Recurring subscriptions only support a narrower set of payment methods than one-time payments.)
+      payment_method_types: ["card"],
       return_url: `${APP_URL}/menu/complete.html?session_id={CHECKOUT_SESSION_ID}`
     });
     res.json({ clientSecret: session.client_secret });
@@ -270,6 +273,8 @@ app.post("/api/shop/create-checkout-session", async (req, res) => {
       ui_mode: "elements",
       mode: "payment",
       line_items: lineItems,
+      // Exclude "link" so its inline "save my info" phone/name prompt doesn't show.
+      payment_method_types: ["card", "klarna", "affirm", "cashapp", "amazon_pay", "crypto"],
       return_url: `${APP_URL}/menu/complete.html?session_id={CHECKOUT_SESSION_ID}`
     });
     res.json({ clientSecret: session.client_secret });

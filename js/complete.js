@@ -28,6 +28,7 @@
     if (session.status === "complete") {
       statusIcon.classList.add("status-ok");
       statusText.textContent = "付款成功，感謝您的購買！";
+      if (window.cartApi) window.cartApi.clearCart();
     } else {
       statusIcon.classList.add("status-error");
       statusText.textContent = "付款未完成，請重新嘗試。";

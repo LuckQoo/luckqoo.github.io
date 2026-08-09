@@ -1,8 +1,7 @@
 (function () {
   const API_BASE = "https://api.epoch-shop.shop";
 
-  const params = new URLSearchParams(window.location.search);
-  const productId = params.get("product");
+  const cart = window.cartApi ? window.cartApi.getCart() : [];
 
   const form = document.getElementById("payment-form");
   const messageEl = document.getElementById("payment-message");
@@ -25,12 +24,21 @@
     buttonText.classList.toggle("hidden", isLoading);
   }
 
+  function renderCartSummary() {
+    const el = document.getElementById("checkout-cart-summary");
+    if (!el || !cart.length) return;
+    el.innerHTML = cart
+      .map((item) => `<div class="cart-row"><div>${item.name} x ${item.qty}</div><div>$${item.price * item.qty}</div></div>`)
+      .join("");
+  }
+
   async function initialize() {
-    if (!productId) {
-      showMessage("找不到商品，請從服務項目頁面選購。");
+    if (!cart.length) {
+      showMessage("購物車是空的，請先到服務項目頁面選購。");
       submitBtn.disabled = true;
       return;
     }
+    renderCartSummary();
 
     let publishableKey;
     try {
@@ -52,7 +60,7 @@
     const clientSecretPromise = fetch(`${API_BASE}/api/shop/create-checkout-session`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items: [{ id: productId, qty: 1 }] })
+      body: JSON.stringify({ items: cart.map((item) => ({ id: item.id, qty: item.qty })) })
     })
       .then((r) => r.json())
       .then((r) => {

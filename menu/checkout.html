@@ -47,7 +47,7 @@
       <a class="menu-btn" href="products.html">服務項目</a>
       <a class="menu-btn" href="hosting.html">虛擬主機</a>
       <a class="menu-btn" href="ai-chat.html">AI Chat</a>
-      <a class="menu-btn active" href="checkout.html">結帳</a>
+      <a class="menu-btn" href="cart.html">購物車（<span data-cart-count>0</span>）</a>
       <a class="menu-btn" href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">生活小品</a>
       <a class="coffee-btn" href="https://www.buymeacoffee.com/haastyu" target="_blank" rel="noopener"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a Coffee&emoji=☕&slug=haastyu&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy me a coffee" /></a>
       </div>
@@ -59,6 +59,8 @@
     <section class="hero" style="text-align:center;">
       <h1 class="cyber-title">結帳</h1>
       <p class="subtitle">請填寫付款資訊完成購買。</p>
+
+      <div id="checkout-cart-summary" style="max-width: 420px; margin: 1rem auto 0; text-align: left;"></div>
 
       <form id="payment-form">
         <div id="contact-details-element" style="margin-bottom: 1rem;">
@@ -81,6 +83,7 @@
   <script src="https://js.stripe.com/dahlia/stripe.js"></script>
   <script src="../js/matrix.js"></script>
   <script src="../js/site.js"></script>
+  <script src="../js/cart.js"></script>
   <script src="../js/checkout.js"></script>
 
   <script src="../assets/jquery.min.js?v=3.3.1"></script>
