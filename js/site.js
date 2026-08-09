@@ -6,7 +6,9 @@
   // and it's remembered on this browser (localStorage) for future page loads.
   const DEV_TOKEN_KEY = "epoch_dev_token";
   const devParam = new URLSearchParams(window.location.search).get("dev");
-  if (devParam) {
+  if (devParam === "off") {
+    localStorage.removeItem(DEV_TOKEN_KEY);
+  } else if (devParam) {
     localStorage.setItem(DEV_TOKEN_KEY, devParam);
   }
   window.getDevToken = function () {

@@ -40,6 +40,15 @@
       statusText.textContent = "付款未完成，請重新嘗試。";
     }
 
+    // Technical details (Payment Intent / Subscription ID, Stripe Dashboard link) are
+    // developer scaffolding — only show them to us in dev mode, never to real customers.
+    const isDev = window.getDevToken && window.getDevToken();
+    if (!isDev) {
+      detailsTable.classList.add("hidden");
+      viewDetails.classList.add("hidden");
+      return;
+    }
+
     sessionStatusEl.textContent = session.payment_status || session.status;
 
     if (session.payment_intent_id) {
