@@ -11,3 +11,6 @@ server/data.db
 .agents/
 .claude/
 skills-lock.json
+
+# Local machine-specific launcher (hardcoded paths, not part of the site)
+start-backend.bat

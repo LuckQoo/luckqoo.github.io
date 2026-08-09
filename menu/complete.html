@@ -3,37 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>結帳 | epoch shop</title>
+  <title>付款結果 | epoch shop</title>
   <link rel="icon" href="/eshop.ico" type="image/x-icon" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/site.css?v=2" />
   <style>
-    #payment-form { max-width: 420px; margin: 1.5rem auto 0; }
-    #payment-element { margin: 1rem 0; }
-    #payment-form button#submit {
-      width: 100%;
-      background: linear-gradient(90deg, #21d46a, #74ffab);
-      color: #04260f;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-    #payment-message {
-      margin-top: 0.8rem;
-      color: var(--danger);
-      text-align: center;
-    }
-    .hidden { display: none; }
-    #spinner {
-      width: 1rem;
-      height: 1rem;
+    #payment-status { max-width: 420px; margin: 1.5rem auto 0; text-align: center; }
+    #status-icon {
+      width: 3rem;
+      height: 3rem;
       border-radius: 50%;
-      border: 2px solid rgba(4, 38, 15, 0.4);
-      border-top-color: #04260f;
-      animation: spin 0.7s linear infinite;
+      margin: 0 auto 0.8rem;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    #status-icon.status-ok { background: var(--accent); }
+    #status-icon.status-error { background: var(--danger); }
+    #details-table { margin-top: 1.2rem; text-align: left; }
+    #details-table table { width: 100%; border-collapse: collapse; }
+    #details-table td { padding: 0.5rem 0.3rem; border-bottom: 1px solid rgba(44, 255, 124, 0.2); word-break: break-all; }
+    #details-table td:first-child { color: var(--muted); white-space: nowrap; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -47,7 +35,7 @@
       <a class="menu-btn" href="products.html">服務項目</a>
       <a class="menu-btn" href="hosting.html">虛擬主機</a>
       <a class="menu-btn" href="ai-chat.html">AI Chat</a>
-      <a class="menu-btn active" href="checkout.html">結帳</a>
+      <a class="menu-btn" href="checkout.html">結帳</a>
       <a class="menu-btn" href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">生活小品</a>
       <a class="coffee-btn" href="https://www.buymeacoffee.com/haastyu" target="_blank" rel="noopener"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a Coffee&emoji=☕&slug=haastyu&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy me a coffee" /></a>
       </div>
@@ -57,31 +45,46 @@
 
   <main>
     <section class="hero" style="text-align:center;">
-      <h1 class="cyber-title">結帳</h1>
-      <p class="subtitle">請填寫付款資訊完成購買。</p>
+      <h1 class="cyber-title">付款結果</h1>
 
-      <form id="payment-form">
-        <div id="contact-details-element" style="margin-bottom: 1rem;">
-          <!--Stripe.js 會在這裡注入電子郵件欄位-->
+      <div id="payment-status">
+        <div id="status-icon"></div>
+        <p id="status-text">查詢中...</p>
+
+        <div id="details-table">
+          <table>
+            <tbody>
+              <tr>
+                <td id="intent-label">ID</td>
+                <td id="intent-id">-</td>
+              </tr>
+              <tr id="intent-status-row">
+                <td id="intent-status-label">狀態</td>
+                <td id="intent-status">-</td>
+              </tr>
+              <tr>
+                <td>付款狀態</td>
+                <td id="session-status">-</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div id="payment-element">
-          <!--Stripe.js 會在這裡注入付款欄位-->
-        </div>
-        <button id="submit">
-          <div class="spinner hidden" id="spinner"></div>
-          <span id="button-text">付款</span>
-        </button>
-        <div id="payment-message" class="hidden"></div>
-      </form>
+
+        <p style="margin-top:1.2rem;">
+          <a id="view-details" class="button ghost" target="_blank" rel="noopener">在 Stripe Dashboard 查看</a>
+        </p>
+        <p style="margin-top:0.6rem;">
+          <a class="button primary" href="products.html">返回服務項目</a>
+        </p>
+      </div>
     </section>
   </main>
 
     <footer class="site-footer">© <span id="year"></span> EPOCH SHOP<br />Business Address: 30 N Gould St Ste R, Sheridan, WY 82801, United States<br />Contact Phone: +1 (307) 204-5345</footer>
 
-  <script src="https://js.stripe.com/dahlia/stripe.js"></script>
   <script src="../js/matrix.js"></script>
   <script src="../js/site.js"></script>
-  <script src="../js/checkout.js"></script>
+  <script src="../js/complete.js"></script>
 
   <script src="../assets/jquery.min.js?v=3.3.1"></script>
   <script src="../assets/jquery-ui.min.js?v=1.12.1"></script>

@@ -41,7 +41,10 @@ const PRODUCTS = {
   "vehicle-model": { name: "車輛模型", amount: 11500 },
   "map-building": { name: "建築 / 地圖", amount: 13500 },
   "npc-skin": { name: "人物 / 服裝", amount: 9000 },
-  "custom-code": { name: "代碼撰寫", amount: 25900 }
+  "custom-code": { name: "代碼撰寫", amount: 25900 },
+  "model-edit-basic": { name: "修改模型 - 基本優化", amount: 1000 },
+  "model-edit-advanced": { name: "修改模型 - 進階", amount: 3000 },
+  "model-edit-ultra": { name: "修改模型 - 極致", amount: 5000 }
 };
 
 if (!JWT_SECRET) {
@@ -82,6 +85,18 @@ app.post("/api/billing/webhook", express.raw({ type: "application/json" }), (req
 
   try {
     switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object;
+        if (session.mode === "subscription") {
+          const userId = Number(session.client_reference_id);
+          if (userId) {
+            db.prepare(
+              "UPDATE users SET stripe_customer_id = ?, stripe_subscription_id = ?, subscription_status = 'active' WHERE id = ?"
+            ).run(session.customer, session.subscription, userId);
+          }
+        }
+        break;
+      }
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const sub = event.data.object;
@@ -194,58 +209,45 @@ app.get("/api/config", (_req, res) => {
   res.json({ publishableKey: STRIPE_PUBLISHABLE_KEY });
 });
 
-// Creates (or reuses) a Stripe customer + an incomplete subscription, and hands back
-// the PaymentIntent client_secret so the frontend can confirm payment in-page with
-// the Payment Element instead of redirecting to Stripe-hosted Checkout.
-app.post("/api/billing/create-subscription-intent", requireAuth, async (req, res) => {
+// Creates a Checkout Session (ui_mode: "elements") for the AI Chat monthly
+// subscription so the frontend can render the Payment Element in-page instead
+// of redirecting to Stripe-hosted Checkout.
+app.post("/api/billing/create-checkout-session", requireAuth, async (req, res) => {
   if (!stripe) return res.status(501).json({ error: "stripe_not_configured" });
   try {
-    let customerId = req.user.stripe_customer_id;
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: req.user.email,
-        metadata: { userId: String(req.user.id) }
-      });
-      customerId = customer.id;
-      db.prepare("UPDATE users SET stripe_customer_id = ? WHERE id = ?").run(customerId, req.user.id);
-    }
-
-    const subscription = await stripe.subscriptions.create({
-      customer: customerId,
-      items: [
+    const session = await stripe.checkout.sessions.create({
+      ui_mode: "elements",
+      mode: "subscription",
+      client_reference_id: String(req.user.id),
+      customer: req.user.stripe_customer_id || undefined,
+      customer_email: req.user.stripe_customer_id ? undefined : req.user.email,
+      line_items: [
         {
           price_data: {
             currency: "usd",
             unit_amount: SUBSCRIPTION_PRICE_USD * 100,
             recurring: { interval: "month" },
             product_data: { name: "Epoch AI Chat 月訂閱" }
-          }
+          },
+          quantity: 1
         }
       ],
-      payment_behavior: "default_incomplete",
-      payment_settings: { save_default_payment_method: "on_subscription" },
-      expand: ["latest_invoice.payment_intent"]
+      return_url: `${APP_URL}/menu/complete.html?session_id={CHECKOUT_SESSION_ID}`
     });
-
-    db.prepare("UPDATE users SET stripe_subscription_id = ? WHERE id = ?").run(subscription.id, req.user.id);
-
-    res.json({
-      clientSecret: subscription.latest_invoice.payment_intent.client_secret,
-      subscriptionId: subscription.id
-    });
+    res.json({ clientSecret: session.client_secret });
   } catch (err) {
     res.status(502).json({ error: "stripe_error", details: err.message });
   }
 });
 
-// One-time purchase for the shop. Amount is always derived from the server-side
-// PRODUCTS catalog so a tampered client-side price can never be charged.
-app.post("/api/shop/create-payment-intent", async (req, res) => {
+// Creates a Checkout Session (ui_mode: "elements") for a one-time shop purchase.
+// Amount is always derived from the server-side PRODUCTS catalog so a tampered
+// client-side price can never be charged.
+app.post("/api/shop/create-checkout-session", async (req, res) => {
   if (!stripe) return res.status(501).json({ error: "stripe_not_configured" });
   const items = Array.isArray(req.body?.items) ? req.body.items : [];
   if (!items.length) return res.status(400).json({ error: "empty_cart" });
 
-  let amount = 0;
   const lineItems = [];
   for (const item of items) {
     const product = PRODUCTS[item?.id];
@@ -253,18 +255,47 @@ app.post("/api/shop/create-payment-intent", async (req, res) => {
     if (!product || qty <= 0) {
       return res.status(400).json({ error: "invalid_item", details: item?.id });
     }
-    amount += product.amount * qty;
-    lineItems.push({ id: item.id, name: product.name, qty, unitAmount: product.amount });
+    lineItems.push({
+      quantity: qty,
+      price_data: {
+        currency: "usd",
+        unit_amount: product.amount,
+        product_data: { name: product.name }
+      }
+    });
   }
 
   try {
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount,
-      currency: "usd",
-      automatic_payment_methods: { enabled: true },
-      metadata: { items: JSON.stringify(lineItems) }
+    const session = await stripe.checkout.sessions.create({
+      ui_mode: "elements",
+      mode: "payment",
+      line_items: lineItems,
+      return_url: `${APP_URL}/menu/complete.html?session_id={CHECKOUT_SESSION_ID}`
     });
-    res.json({ clientSecret: paymentIntent.client_secret, amount });
+    res.json({ clientSecret: session.client_secret });
+  } catch (err) {
+    res.status(502).json({ error: "stripe_error", details: err.message });
+  }
+});
+
+// Used by the return page (complete.html) to look up the outcome of a Checkout
+// Session after Stripe redirects the customer back with ?session_id=....
+app.get("/api/checkout/session-status", async (req, res) => {
+  if (!stripe) return res.status(501).json({ error: "stripe_not_configured" });
+  const sessionId = typeof req.query.session_id === "string" ? req.query.session_id : "";
+  if (!sessionId) return res.status(400).json({ error: "session_id required" });
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ["payment_intent", "subscription"]
+    });
+    res.json({
+      status: session.status,
+      payment_status: session.payment_status,
+      payment_intent_id: session.payment_intent?.id || null,
+      payment_intent_status: session.payment_intent?.status || null,
+      subscription_id: session.payment_intent ? null : session.subscription?.id || null,
+      subscription_status: session.payment_intent ? null : session.subscription?.status || null
+    });
   } catch (err) {
     res.status(502).json({ error: "stripe_error", details: err.message });
   }
