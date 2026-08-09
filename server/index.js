@@ -34,7 +34,25 @@ const APP_URL = process.env.APP_URL || "https://epoch-shop.shop";
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
 const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || "";
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
-const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
+const stripeLive = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
+
+// Personal test-mode access: only requests carrying ?dev=<DEV_MODE_TOKEN> use the
+// test-mode Stripe keys. Everyone else always gets the live keys.
+const STRIPE_SECRET_KEY_TEST = process.env.STRIPE_SECRET_KEY_TEST || "";
+const STRIPE_PUBLISHABLE_KEY_TEST = process.env.STRIPE_PUBLISHABLE_KEY_TEST || "";
+const DEV_MODE_TOKEN = process.env.DEV_MODE_TOKEN || "";
+const stripeTest = STRIPE_SECRET_KEY_TEST ? new Stripe(STRIPE_SECRET_KEY_TEST) : null;
+
+function isDevMode(req) {
+  return Boolean(DEV_MODE_TOKEN) && req.query.dev === DEV_MODE_TOKEN;
+}
+
+function getStripeContext(req) {
+  if (isDevMode(req) && stripeTest) {
+    return { stripe: stripeTest, publishableKey: STRIPE_PUBLISHABLE_KEY_TEST };
+  }
+  return { stripe: stripeLive, publishableKey: STRIPE_PUBLISHABLE_KEY };
+}
 
 // Server-side price list — never trust a price/amount sent from the client.
 const PRODUCTS = {
@@ -72,13 +90,13 @@ const SEARCH_RESULTS = 3;
 // Stripe webhook needs the raw body for signature verification, so it must be
 // registered before the global express.json() body parser below.
 app.post("/api/billing/webhook", express.raw({ type: "application/json" }), (req, res) => {
-  if (!stripe || !STRIPE_WEBHOOK_SECRET) {
+  if (!stripeLive || !STRIPE_WEBHOOK_SECRET) {
     return res.status(501).json({ error: "stripe_not_configured" });
   }
 
   let event;
   try {
-    event = stripe.webhooks.constructEvent(req.body, req.headers["stripe-signature"], STRIPE_WEBHOOK_SECRET);
+    event = stripeLive.webhooks.constructEvent(req.body, req.headers["stripe-signature"], STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     return res.status(400).send(`Webhook signature verification failed: ${err.message}`);
   }
@@ -205,14 +223,16 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
   res.json({ user: publicUser(req.user) });
 });
 
-app.get("/api/config", (_req, res) => {
-  res.json({ publishableKey: STRIPE_PUBLISHABLE_KEY });
+app.get("/api/config", (req, res) => {
+  const { publishableKey } = getStripeContext(req);
+  res.json({ publishableKey, devMode: isDevMode(req) });
 });
 
 // Creates a Checkout Session (ui_mode: "elements") for the AI Chat monthly
 // subscription so the frontend can render the Payment Element in-page instead
 // of redirecting to Stripe-hosted Checkout.
 app.post("/api/billing/create-checkout-session", requireAuth, async (req, res) => {
+  const { stripe } = getStripeContext(req);
   if (!stripe) return res.status(501).json({ error: "stripe_not_configured" });
   try {
     const session = await stripe.checkout.sessions.create({
@@ -247,6 +267,7 @@ app.post("/api/billing/create-checkout-session", requireAuth, async (req, res) =
 // Amount is always derived from the server-side PRODUCTS catalog so a tampered
 // client-side price can never be charged.
 app.post("/api/shop/create-checkout-session", async (req, res) => {
+  const { stripe } = getStripeContext(req);
   if (!stripe) return res.status(501).json({ error: "stripe_not_configured" });
   const items = Array.isArray(req.body?.items) ? req.body.items : [];
   if (!items.length) return res.status(400).json({ error: "empty_cart" });
@@ -286,6 +307,7 @@ app.post("/api/shop/create-checkout-session", async (req, res) => {
 // Used by the return page (complete.html) to look up the outcome of a Checkout
 // Session after Stripe redirects the customer back with ?session_id=....
 app.get("/api/checkout/session-status", async (req, res) => {
+  const { stripe } = getStripeContext(req);
   if (!stripe) return res.status(501).json({ error: "stripe_not_configured" });
   const sessionId = typeof req.query.session_id === "string" ? req.query.session_id : "";
   if (!sessionId) return res.status(400).json({ error: "session_id required" });
@@ -307,6 +329,7 @@ app.get("/api/checkout/session-status", async (req, res) => {
 });
 
 app.post("/api/billing/create-portal-session", requireAuth, async (req, res) => {
+  const { stripe } = getStripeContext(req);
   if (!stripe) return res.status(501).json({ error: "stripe_not_configured" });
   if (!req.user.stripe_customer_id) return res.status(400).json({ error: "no_subscription" });
   try {

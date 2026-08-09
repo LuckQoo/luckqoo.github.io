@@ -1,6 +1,12 @@
 (function () {
   const API_BASE = "https://api.epoch-shop.shop";
 
+  function apiUrl(path) {
+    const devToken = window.getDevToken ? window.getDevToken() : "";
+    const sep = path.includes("?") ? "&" : "?";
+    return devToken ? `${API_BASE}${path}${sep}dev=${encodeURIComponent(devToken)}` : `${API_BASE}${path}`;
+  }
+
   const cart = window.cartApi ? window.cartApi.getCart() : [];
 
   const form = document.getElementById("payment-form");
@@ -42,7 +48,7 @@
 
     let publishableKey;
     try {
-      const configRes = await fetch(`${API_BASE}/api/config`);
+      const configRes = await fetch(apiUrl("/api/config"));
       ({ publishableKey } = await configRes.json());
     } catch {
       showMessage("無法連線到伺服器，請稍後再試。");
@@ -57,7 +63,7 @@
 
     const stripe = Stripe(publishableKey);
 
-    const clientSecretPromise = fetch(`${API_BASE}/api/shop/create-checkout-session`, {
+    const clientSecretPromise = fetch(apiUrl("/api/shop/create-checkout-session"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items: cart.map((item) => ({ id: item.id, qty: item.qty })) })

@@ -1,6 +1,12 @@
 (function () {
   const API_BASE = "https://api.epoch-shop.shop";
 
+  function apiUrl(path) {
+    const devToken = window.getDevToken ? window.getDevToken() : "";
+    const sep = path.includes("?") ? "&" : "?";
+    return devToken ? `${API_BASE}${path}${sep}dev=${encodeURIComponent(devToken)}` : `${API_BASE}${path}`;
+  }
+
   const statusIcon = document.getElementById("status-icon");
   const statusText = document.getElementById("status-text");
   const detailsTable = document.getElementById("details-table");
@@ -61,7 +67,7 @@
       return;
     }
     try {
-      const res = await fetch(`${API_BASE}/api/checkout/session-status?session_id=${encodeURIComponent(sessionId)}`);
+      const res = await fetch(apiUrl(`/api/checkout/session-status?session_id=${encodeURIComponent(sessionId)}`));
       const session = await res.json();
       setSessionDetails(session);
     } catch {
