@@ -3,7 +3,6 @@ server/node_modules
 npm-debug.log*
 yarn-error.log*
 .DS_Store
-.env
 server/.env
 server/data.db
 
@@ -14,3 +13,11 @@ skills-lock.json
 
 # Local machine-specific launcher (hardcoded paths, not part of the site)
 start-backend.bat
+
+.projects/cache
+.projects/vault
+.projects/state.test.json
+.projects/state.local.test.json
+.env
+.env.*
+!.env.example
