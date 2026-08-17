@@ -5,12 +5,12 @@ import https from "https";
 import { URL, fileURLToPath } from "url";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import cookieParser from "cookie-parser";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Database from "better-sqlite3";
 import Stripe from "stripe";
-import { Environment, LogLevel, Paddle } from "@paddle/paddle-node-sdk";
 
 // In-memory short-term session storage for chat history
 const sessions = new Map();
@@ -44,12 +44,7 @@ const STRIPE_PUBLISHABLE_KEY_TEST = process.env.STRIPE_PUBLISHABLE_KEY_TEST || "
 const DEV_MODE_TOKEN = process.env.DEV_MODE_TOKEN || "";
 const stripeTest = STRIPE_SECRET_KEY_TEST ? new Stripe(STRIPE_SECRET_KEY_TEST) : null;
 
-const PADDLE_API_KEY = process.env.PADDLE_API_KEY || "";
-const PADDLE_WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET || "";
-const PADDLE_ENV = process.env.PADDLE_ENV === "production" ? Environment.production : Environment.sandbox;
-const paddle = PADDLE_API_KEY
-  ? new Paddle(PADDLE_API_KEY, { environment: PADDLE_ENV, logLevel: LogLevel.error })
-  : null;
+const CODAPAY_API_KEY = process.env.CODAPAY_API_KEY || "";
 
 function isDevMode(req) {
   return Boolean(DEV_MODE_TOKEN) && req.query.dev === DEV_MODE_TOKEN;
@@ -150,38 +145,6 @@ app.post("/api/billing/webhook", express.raw({ type: "application/json" }), (req
   res.json({ received: true });
 });
 
-// Paddle signs the exact request bytes, so this route must remain before
-// express.json(). A failed verification returns non-2xx so Paddle retries it.
-app.post("/api/paddle/webhook", express.raw({ type: "application/json" }), async (req, res) => {
-  const signature = req.headers["paddle-signature"] || "";
-  if (!paddle || !PADDLE_WEBHOOK_SECRET) {
-    return res.status(503).json({ error: "paddle_not_configured" });
-  }
-  if (!signature || !req.body?.length) {
-    return res.status(400).json({ error: "missing_signature_or_body" });
-  }
-
-  try {
-    const event = await paddle.webhooks.unmarshal(
-      req.body.toString("utf8"),
-      PADDLE_WEBHOOK_SECRET,
-      signature
-    );
-
-    // This safely acknowledges verified events. Add idempotent database
-    // upserts here before using subscription state to grant access.
-    console.info("Paddle webhook received", {
-      eventId: event.eventId,
-      eventType: event.eventType,
-      occurredAt: event.occurredAt
-    });
-    return res.json({ received: true });
-  } catch (err) {
-    console.error("Paddle webhook processing failed", err);
-    return res.status(500).json({ error: "paddle_webhook_failed" });
-  }
-});
-
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
 app.use(
@@ -193,6 +156,71 @@ app.use(
     maxAge: 86400
   })
 );
+
+function md5(value) {
+  return crypto.createHash("md5").update(value, "utf8").digest("hex");
+}
+
+function checksumsMatch(received, expected) {
+  if (typeof received !== "string" || !/^[a-f\d]{32}$/i.test(received)) return false;
+  const receivedBuffer = Buffer.from(received.toLowerCase(), "utf8");
+  const expectedBuffer = Buffer.from(expected.toLowerCase(), "utf8");
+  return crypto.timingSafeEqual(receivedBuffer, expectedBuffer);
+}
+
+// Codapay sends final transaction status as GET query parameters and expects
+// this exact text acknowledgment. Never fulfill an order from a landing page.
+app.get("/api/codapay/transaction-notification", (req, res) => {
+  if (!CODAPAY_API_KEY) {
+    return res.status(503).type("text/plain").send("ResultCode=500");
+  }
+
+  const txnId = String(req.query.TxnId || "");
+  const orderId = String(req.query.OrderId || "");
+  const resultCode = String(req.query.ResultCode || "");
+  const checksum = String(req.query.Checksum || "");
+  if (!txnId || !orderId || !resultCode || !checksum) {
+    return res.status(400).type("text/plain").send("ResultCode=400");
+  }
+
+  const expectedChecksum = md5(`${txnId}${CODAPAY_API_KEY}${orderId}${resultCode}`);
+  if (!checksumsMatch(checksum, expectedChecksum)) {
+    return res.status(401).type("text/plain").send("ResultCode=401");
+  }
+
+  // Verified only: reconcile with InquiryPaymentResult before fulfillment.
+  console.info("Codapay transaction notification", { txnId, orderId, resultCode });
+  return res.status(200).type("text/plain").send("ResultCode=0");
+});
+
+// Codapay recurring-payment notifications use POST JSON and a JSON ack.
+app.post("/api/codapay/subscription-notification", (req, res) => {
+  if (!CODAPAY_API_KEY) return res.status(503).json({ ResultCode: 500 });
+
+  const body = req.body && typeof req.body === "object" ? req.body : {};
+  const eventType = String(body.eventType || "");
+  const txnId = String(body.txnId || "");
+  const orderId = String(body.orderId || "");
+  const resultCode = String(body.resultCode ?? "");
+  const checksum = String(body.checksum || "");
+
+  // Transaction events use the Codapay Payin checksum formula.
+  if (!eventType || !txnId || !orderId || !resultCode || !checksum) {
+    return res.status(400).json({ ResultCode: 400 });
+  }
+  const expectedChecksum = md5(`${txnId}${CODAPAY_API_KEY}${orderId}${resultCode}`);
+  if (!checksumsMatch(checksum, expectedChecksum)) {
+    return res.status(401).json({ ResultCode: 401 });
+  }
+
+  console.info("Codapay subscription notification", {
+    eventType,
+    txnId,
+    orderId,
+    resultCode
+  });
+  return res.status(200).json({ ResultCode: 0 });
+});
 
 function signSession(user) {
   return jwt.sign({ uid: user.id }, JWT_SECRET, { expiresIn: "30d" });
