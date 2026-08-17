@@ -49,6 +49,14 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: cart.map((item) => ({ id: item.id, qty: item.qty })) })
       });
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error(
+          response.status === 404
+            ? "Codapay 後端 API 尚未部署（HTTP 404）。"
+            : `Codapay 後端回應格式錯誤（HTTP ${response.status}）。`
+        );
+      }
       const data = await response.json();
       if (!response.ok || !data.clientSecret) {
         throw new Error(data.details || data.resultDesc || "無法建立 Codapay 付款工作階段。");
