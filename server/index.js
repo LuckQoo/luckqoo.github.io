@@ -10,6 +10,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Database from "better-sqlite3";
 import Stripe from "stripe";
+import { Environment, LogLevel, Paddle } from "@paddle/paddle-node-sdk";
 
 // In-memory short-term session storage for chat history
 const sessions = new Map();
@@ -42,6 +43,13 @@ const STRIPE_SECRET_KEY_TEST = process.env.STRIPE_SECRET_KEY_TEST || "";
 const STRIPE_PUBLISHABLE_KEY_TEST = process.env.STRIPE_PUBLISHABLE_KEY_TEST || "";
 const DEV_MODE_TOKEN = process.env.DEV_MODE_TOKEN || "";
 const stripeTest = STRIPE_SECRET_KEY_TEST ? new Stripe(STRIPE_SECRET_KEY_TEST) : null;
+
+const PADDLE_API_KEY = process.env.PADDLE_API_KEY || "";
+const PADDLE_WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET || "";
+const PADDLE_ENV = process.env.PADDLE_ENV === "production" ? Environment.production : Environment.sandbox;
+const paddle = PADDLE_API_KEY
+  ? new Paddle(PADDLE_API_KEY, { environment: PADDLE_ENV, logLevel: LogLevel.error })
+  : null;
 
 function isDevMode(req) {
   return Boolean(DEV_MODE_TOKEN) && req.query.dev === DEV_MODE_TOKEN;
@@ -140,6 +148,38 @@ app.post("/api/billing/webhook", express.raw({ type: "application/json" }), (req
   }
 
   res.json({ received: true });
+});
+
+// Paddle signs the exact request bytes, so this route must remain before
+// express.json(). A failed verification returns non-2xx so Paddle retries it.
+app.post("/api/paddle/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  const signature = req.headers["paddle-signature"] || "";
+  if (!paddle || !PADDLE_WEBHOOK_SECRET) {
+    return res.status(503).json({ error: "paddle_not_configured" });
+  }
+  if (!signature || !req.body?.length) {
+    return res.status(400).json({ error: "missing_signature_or_body" });
+  }
+
+  try {
+    const event = await paddle.webhooks.unmarshal(
+      req.body.toString("utf8"),
+      PADDLE_WEBHOOK_SECRET,
+      signature
+    );
+
+    // This safely acknowledges verified events. Add idempotent database
+    // upserts here before using subscription state to grant access.
+    console.info("Paddle webhook received", {
+      eventId: event.eventId,
+      eventType: event.eventType,
+      occurredAt: event.occurredAt
+    });
+    return res.json({ received: true });
+  } catch (err) {
+    console.error("Paddle webhook processing failed", err);
+    return res.status(500).json({ error: "paddle_webhook_failed" });
+  }
 });
 
 app.use(express.json({ limit: "1mb" }));
