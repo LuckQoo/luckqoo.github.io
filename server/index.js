@@ -45,6 +45,11 @@ const DEV_MODE_TOKEN = process.env.DEV_MODE_TOKEN || "";
 const stripeTest = STRIPE_SECRET_KEY_TEST ? new Stripe(STRIPE_SECRET_KEY_TEST) : null;
 
 const CODAPAY_API_KEY = process.env.CODAPAY_API_KEY || "";
+const CODAPAY_PROJECT_ID = Number(process.env.CODAPAY_PROJECT_ID || 3912);
+const CODAPAY_ENV = process.env.CODAPAY_ENV === "production" ? "production" : "sandbox";
+const CODAPAY_BASE_URL = CODAPAY_ENV === "production"
+  ? "https://airtime.codapayments.com/airtime/api/restful/v2.0/Payment"
+  : "https://sandbox.codapayments.com/airtime/api/restful/v2.0/Payment";
 
 function isDevMode(req) {
   return Boolean(DEV_MODE_TOKEN) && req.query.dev === DEV_MODE_TOKEN;
@@ -59,13 +64,13 @@ function getStripeContext(req) {
 
 // Server-side price list — never trust a price/amount sent from the client.
 const PRODUCTS = {
-  "vehicle-model": { name: "車輛模型", amount: 11500 },
-  "map-building": { name: "建築 / 地圖", amount: 13500 },
-  "npc-skin": { name: "人物 / 服裝", amount: 9000 },
-  "custom-code": { name: "代碼撰寫", amount: 25900 },
-  "model-edit-basic": { name: "修改模型 - 基本優化", amount: 1000 },
-  "model-edit-advanced": { name: "修改模型 - 進階", amount: 3000 },
-  "model-edit-ultra": { name: "修改模型 - 極致", amount: 5000 }
+  "vehicle-model": { name: "車輛模型", codapayName: "Vehicle Model", amount: 11500 },
+  "map-building": { name: "建築 / 地圖", codapayName: "Building or Map", amount: 13500 },
+  "npc-skin": { name: "人物 / 服裝", codapayName: "Character or Outfit", amount: 9000 },
+  "custom-code": { name: "代碼撰寫", codapayName: "Custom Code", amount: 25900 },
+  "model-edit-basic": { name: "修改模型 - 基本優化", codapayName: "Model Edit Basic", amount: 1000 },
+  "model-edit-advanced": { name: "修改模型 - 進階", codapayName: "Model Edit Advanced", amount: 3000 },
+  "model-edit-ultra": { name: "修改模型 - 極致", codapayName: "Model Edit Ultra", amount: 5000 }
 };
 
 // Recurring hosting plans — separate catalog because they check out with
@@ -167,6 +172,83 @@ function checksumsMatch(received, expected) {
   const expectedBuffer = Buffer.from(expected.toLowerCase(), "utf8");
   return crypto.timingSafeEqual(receivedBuffer, expectedBuffer);
 }
+
+async function parseCodapayJson(response) {
+  const raw = await response.text();
+  return JSON.parse(raw.replace(/("txnId"\s*:\s*)(\d{16,})/g, '$1"$2"'));
+}
+
+app.post("/api/codapay/create-component-session", async (req, res) => {
+  if (!CODAPAY_API_KEY || !CODAPAY_PROJECT_ID) {
+    return res.status(503).json({ error: "codapay_not_configured" });
+  }
+
+  const requestedItems = Array.isArray(req.body?.items) ? req.body.items : [];
+  if (!requestedItems.length) return res.status(400).json({ error: "empty_cart" });
+
+  const items = [];
+  for (const requested of requestedItems) {
+    const quantity = Number(requested?.qty) || 0;
+    if (HOSTING_PLANS[requested?.id]) {
+      return res.status(400).json({
+        error: "recurring_not_supported",
+        details: "Codapay recurring billing is not available for hosting plans yet."
+      });
+    }
+    const product = PRODUCTS[requested?.id];
+    if (!product || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
+      return res.status(400).json({ error: "invalid_item", details: requested?.id });
+    }
+    for (let index = 0; index < quantity; index += 1) {
+      items.push({
+        code: requested.id,
+        price: product.amount / 100,
+        name: product.codapayName
+      });
+    }
+  }
+
+  const orderId = `epoch-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
+  const initRequest = {
+    country: 158,
+    payType: 428,
+    apiKey: CODAPAY_API_KEY,
+    projectId: CODAPAY_PROJECT_ID,
+    orderId,
+    currency: 840,
+    items,
+    profile: { entry: [{ key: "user_id", value: "epoch-shop-customer" }] }
+  };
+
+  try {
+    const response = await fetch(`${CODAPAY_BASE_URL}/Component/init.json`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initRequest }),
+      signal: AbortSignal.timeout(15000)
+    });
+    const data = await parseCodapayJson(response);
+    const result = data?.initResult;
+    if (!response.ok || result?.resultCode !== 0 || !result?.txnId || !result?.clientSecret) {
+      return res.status(502).json({
+        error: "codapay_init_failed",
+        resultCode: result?.resultCode,
+        resultDesc: result?.resultDesc
+      });
+    }
+    return res.json({
+      orderId,
+      txnId: String(result.txnId),
+      clientSecret: result.clientSecret,
+      amount: items.reduce((sum, item) => sum + item.price, 0),
+      currency: "USD",
+      environment: CODAPAY_ENV
+    });
+  } catch (error) {
+    console.error("Codapay component init failed", error);
+    return res.status(502).json({ error: "codapay_unavailable" });
+  }
+});
 
 // Codapay sends final transaction status as GET query parameters and expects
 // this exact text acknowledgment. Never fulfill an order from a landing page.
