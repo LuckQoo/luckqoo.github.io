@@ -92,6 +92,10 @@
       chargeComponent.mount("#payment-element");
       buttonText.textContent = `支付 $${Number(data.amount).toFixed(2)} ${data.currency}`;
     } catch (error) {
+      const paymentElement = document.getElementById("payment-element");
+      if (paymentElement) {
+        paymentElement.textContent = "Codapay 付款服務尚未完成後端部署，請稍後再試。";
+      }
       showMessage(error.message || "無法載入付款頁面。", true);
       submitBtn.disabled = true;
     }
