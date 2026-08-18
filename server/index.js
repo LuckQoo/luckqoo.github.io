@@ -55,6 +55,7 @@ const CODAPAY_BASE_URL = CODAPAY_ENV === "production"
 const PAYMENT_SESSION_WINDOW_MS = 10 * 60 * 1000;
 const PAYMENT_SESSION_LIMIT = 10;
 const paymentSessionAttempts = new Map();
+const paymentSessions = new Map();
 
 function isDevMode(req) {
   return Boolean(DEV_MODE_TOKEN) && req.query.dev === DEV_MODE_TOKEN;
@@ -256,6 +257,10 @@ app.post("/api/codapay/create-component-session", paymentSessionRateLimit, async
         resultDesc: result?.resultDesc
       });
     }
+    paymentSessions.set(String(result.txnId), {
+      orderId,
+      createdAt: Date.now()
+    });
     return res.json({
       orderId,
       txnId: String(result.txnId),
@@ -267,6 +272,58 @@ app.post("/api/codapay/create-component-session", paymentSessionRateLimit, async
   } catch (error) {
     console.error("Codapay component init failed", error);
     return res.status(502).json({ error: "codapay_unavailable" });
+  }
+});
+
+app.post("/api/codapay/payment-status", async (req, res) => {
+  const txnId = String(req.body?.txnId || "");
+  if (!/^\d{16,25}$/.test(txnId)) {
+    return res.status(400).json({ error: "invalid_transaction" });
+  }
+
+  const session = paymentSessions.get(txnId);
+  if (!session || Date.now() - session.createdAt > 60 * 60 * 1000) {
+    paymentSessions.delete(txnId);
+    return res.status(404).json({ error: "unknown_transaction" });
+  }
+
+  const inquiryPaymentRequest = {
+    txnId,
+    country: 158,
+    apiKey: CODAPAY_API_KEY,
+    projectId: String(CODAPAY_PROJECT_ID),
+    needStatusFinal: "true"
+  };
+
+  try {
+    const response = await fetch(`${CODAPAY_BASE_URL}/inquiryPaymentResult.json`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ inquiryPaymentRequest }),
+      signal: AbortSignal.timeout(15000)
+    });
+    const data = await parseCodapayJson(response);
+    const result = data?.paymentResult;
+    const resultCode = Number(result?.resultCode);
+    if (!response.ok || !Number.isFinite(resultCode)) {
+      return res.status(502).json({ error: "payment_status_unavailable" });
+    }
+
+    const status = resultCode === 0
+      ? "success"
+      : resultCode === 431 || resultCode === 216
+        ? "pending"
+        : "failed";
+    return res.json({
+      status,
+      resultCode,
+      resultDesc: result?.resultDesc || "",
+      txnId,
+      orderId: session.orderId
+    });
+  } catch (error) {
+    console.error("Payment status inquiry failed", error);
+    return res.status(502).json({ error: "payment_status_unavailable" });
   }
 });
 

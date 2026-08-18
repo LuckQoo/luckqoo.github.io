@@ -9,6 +9,8 @@
   const spinner = document.getElementById("spinner");
   const buttonText = document.getElementById("button-text");
   let chargeComponent = null;
+  let transactionId = "";
+  let transactionOrderId = "";
 
   if (!form) return;
 
@@ -30,6 +32,29 @@
     summary.innerHTML = cart.map((item) =>
       `<div class="cart-row"><div>${item.name} × ${item.qty}</div><div>$${item.price * item.qty}${item.recurring ? "/月" : ""}</div></div>`
     ).join("");
+  }
+
+  async function waitForPaymentResult() {
+    for (let attempt = 0; attempt < 15; attempt += 1) {
+      const response = await fetch(`${API_BASE}/api/codapay/payment-status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ txnId: transactionId })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error("暫時無法確認付款狀態，請稍後再試。");
+      if (data.status === "success") {
+        if (window.cartApi) window.cartApi.clearCart();
+        const query = new URLSearchParams({ txn_id: transactionId, order_id: transactionOrderId });
+        window.location.assign(`codapay-complete.html?${query.toString()}`);
+        return;
+      }
+      if (data.status === "failed") {
+        throw new Error(data.resultDesc || "付款未完成，請檢查資料後再試。");
+      }
+      await new Promise((resolve) => window.setTimeout(resolve, 2000));
+    }
+    showMessage("付款仍在處理中，請勿重複付款；稍後可憑交易編號向我們查詢。", false);
   }
 
   async function initialize() {
@@ -61,6 +86,8 @@
       if (!response.ok || !data.clientSecret) {
         throw new Error(data.details || data.resultDesc || "無法建立安全付款工作階段。");
       }
+      transactionId = String(data.txnId || "");
+      transactionOrderId = String(data.orderId || "");
       if (typeof window.CodaCard !== "function") throw new Error("安全付款元件載入失敗。");
 
       const components = window.CodaCard().components({
@@ -84,7 +111,10 @@
         submitBtn.disabled = true;
         if (isSuccess) {
           showMessage("付款已送出，正在等待付款伺服器確認。", false);
-          if (window.cartApi) window.cartApi.clearCart();
+          waitForPaymentResult().catch(function (error) {
+            showMessage(error.message || "暫時無法確認付款狀態。", true);
+            submitBtn.disabled = false;
+          });
         } else {
           showMessage(errorMessage || "付款失敗，請檢查資料後再試。", true);
           submitBtn.disabled = false;
