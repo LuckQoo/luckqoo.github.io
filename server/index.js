@@ -51,6 +51,7 @@ const CODAPAY_ENV = process.env.CODAPAY_ENV === "production" ? "production" : "s
 const CODAPAY_BASE_URL = CODAPAY_ENV === "production"
   ? "https://airtime.codapayments.com/airtime/api/restful/v2.0/Payment"
   : "https://sandbox.codapayments.com/airtime/api/restful/v2.0/Payment";
+const CODASHOP_SECRET_KEY = process.env.CODASHOP_SECRET_KEY || "";
 
 const PAYMENT_SESSION_WINDOW_MS = 10 * 60 * 1000;
 const PAYMENT_SESSION_LIMIT = 10;
@@ -86,6 +87,27 @@ const HOSTING_PLANS = {
   "hosting-n": { name: "N 系列主機", amount: 60000 }
 };
 
+const CODASHOP_SKUS = new Set([
+  "vehicle-model",
+  "vehicle-models",
+  "map-building",
+  "buildings-and-maps",
+  "npc-skin",
+  "character-assets",
+  "custom-code",
+  "custom-development",
+  "model-edit-basic",
+  "basic-model-optimization",
+  "model-edit-advanced",
+  "advanced-model-optimization",
+  "model-edit-ultra",
+  "ultimate-model-optimization",
+  "hosting-e",
+  "e-series-hosting",
+  "hosting-n",
+  "n-series-hosting"
+]);
+
 if (!JWT_SECRET) {
   console.warn("WARNING: JWT_SECRET is not set. Set it in .env before going to production.");
 }
@@ -101,6 +123,24 @@ db.exec(`
     stripe_subscription_id TEXT,
     subscription_status TEXT NOT NULL DEFAULT 'inactive',
     created_at TEXT DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS codashop_orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id TEXT UNIQUE NOT NULL,
+    txn_id TEXT NOT NULL,
+    request_id TEXT NOT NULL,
+    merchant_transaction_id TEXT,
+    customer_email TEXT NOT NULL,
+    sku TEXT NOT NULL,
+    quantity INTEGER NOT NULL,
+    amount TEXT NOT NULL,
+    currency TEXT NOT NULL,
+    purchase_origin TEXT,
+    is_test INTEGER NOT NULL DEFAULT 1,
+    status TEXT NOT NULL DEFAULT 'accepted',
+    raw_request TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
   )
 `);
 
@@ -198,6 +238,135 @@ function paymentSessionRateLimit(req, res, next) {
   paymentSessionAttempts.set(clientId, recent);
   return next();
 }
+
+function codashopError(id, code, message) {
+  return { id: String(id || ""), jsonrpc: "2.0", error: { code, message } };
+}
+
+function normalizeCodashopSku(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function isCustomerEmail(value) {
+  const email = String(value || "").trim();
+  return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function codashopSignaturePayload(body, params) {
+  const user = params.user || {};
+  const price = params.price || {};
+  const values = [
+    body.id,
+    body.jsonrpc,
+    body.method,
+    params.serviceProvider,
+    params.txnId,
+    params.orderId,
+    user.userId,
+    user.zoneId,
+    price.currency,
+    price.amount,
+    params.sku,
+    params.quantity,
+    params.paymentChannelId,
+    params.isForTest
+  ];
+  if (user.roleId !== undefined && user.roleId !== null && String(user.roleId) !== "") {
+    values.push(user.roleId);
+  }
+  return values.map((value) => String(value ?? "")).join("");
+}
+
+function verifyCodashopSignature(body, params) {
+  if (!CODASHOP_SECRET_KEY || typeof params.signature !== "string") return false;
+  const expected = crypto
+    .createHmac("sha256", CODASHOP_SECRET_KEY)
+    .update(codashopSignaturePayload(body, params), "utf8")
+    .digest("hex");
+  const received = params.signature.trim().toLowerCase();
+  if (!/^[a-f\d]{64}$/.test(received)) return false;
+  return crypto.timingSafeEqual(Buffer.from(received), Buffer.from(expected));
+}
+
+function parseCodashopRequest(req, expectedMethod) {
+  const body = req.body;
+  const params = Array.isArray(body?.params) ? body.params[0] : null;
+  if (!body || body.jsonrpc !== "2.0" || body.method !== expectedMethod || !body.id || !params) {
+    return { error: codashopError(body?.id, -32600, "Invalid Request") };
+  }
+  if (!verifyCodashopSignature(body, params)) {
+    return { error: codashopError(body.id, -101, "Invalid signature") };
+  }
+  const email = String(params.user?.userId || "").trim().toLowerCase();
+  if (!isCustomerEmail(email)) {
+    return { error: codashopError(body.id, -100, "Invalid user ID") };
+  }
+  const sku = normalizeCodashopSku(params.sku);
+  if (!CODASHOP_SKUS.has(sku)) {
+    return { error: codashopError(body.id, -102, "Invalid SKU") };
+  }
+  const quantity = Number(params.quantity);
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
+    return { error: codashopError(body.id, -102, "Invalid quantity") };
+  }
+  return { body, params, email, sku, quantity };
+}
+
+app.post("/api/codashop/validate", (req, res) => {
+  const parsed = parseCodashopRequest(req, "validate");
+  if (parsed.error) return res.json(parsed.error);
+  const { body, params, email } = parsed;
+  return res.json({
+    id: String(body.id),
+    jsonrpc: "2.0",
+    result: {
+      merchantTransactionId: `epoch-${String(params.orderId || body.id)}`,
+      username: email.replace(/^(.{2}).*(@.*)$/, "$1***$2"),
+      accountRegionCode: String(params.purchaseOrigin || "US").toUpperCase().slice(0, 2)
+    }
+  });
+});
+
+app.post("/api/codashop/topup", (req, res) => {
+  const parsed = parseCodashopRequest(req, "topup");
+  if (parsed.error) return res.json(parsed.error);
+  const { body, params, email, sku, quantity } = parsed;
+  const orderId = String(params.orderId || "");
+  const txnId = String(params.txnId || "");
+  if (!orderId || !txnId) return res.json(codashopError(body.id, -32602, "Invalid order"));
+
+  try {
+    db.prepare(`
+      INSERT INTO codashop_orders (
+        order_id, txn_id, request_id, merchant_transaction_id, customer_email,
+        sku, quantity, amount, currency, purchase_origin, is_test, raw_request
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(order_id) DO NOTHING
+    `).run(
+      orderId,
+      txnId,
+      String(body.id),
+      String(params.merchantTransactionId || ""),
+      email,
+      sku,
+      quantity,
+      String(params.price?.amount || ""),
+      String(params.price?.currency || ""),
+      String(params.purchaseOrigin || ""),
+      Number(params.isForTest) === 1 ? 1 : 0,
+      JSON.stringify(body)
+    );
+    return res.json({ id: String(body.id), jsonrpc: "2.0", result: 0 });
+  } catch (error) {
+    console.error("Codashop top-up persistence failed", error);
+    return res.json(codashopError(body.id, -103, "Service is temporarily unavailable"));
+  }
+});
 
 app.post("/api/codapay/create-component-session", paymentSessionRateLimit, async (req, res) => {
   if (!CODAPAY_API_KEY || !CODAPAY_PROJECT_ID) {
