@@ -52,6 +52,10 @@ const CODAPAY_BASE_URL = CODAPAY_ENV === "production"
   ? "https://airtime.codapayments.com/airtime/api/restful/v2.0/Payment"
   : "https://sandbox.codapayments.com/airtime/api/restful/v2.0/Payment";
 
+const PAYMENT_SESSION_WINDOW_MS = 10 * 60 * 1000;
+const PAYMENT_SESSION_LIMIT = 10;
+const paymentSessionAttempts = new Map();
+
 function isDevMode(req) {
   return Boolean(DEV_MODE_TOKEN) && req.query.dev === DEV_MODE_TOKEN;
 }
@@ -179,7 +183,22 @@ async function parseCodapayJson(response) {
   return JSON.parse(raw.replace(/("txnId"\s*:\s*)(\d{16,})/g, '$1"$2"'));
 }
 
-app.post("/api/codapay/create-component-session", async (req, res) => {
+function paymentSessionRateLimit(req, res, next) {
+  const clientId = String(req.headers["cf-connecting-ip"] || req.ip || "unknown");
+  const now = Date.now();
+  const recent = (paymentSessionAttempts.get(clientId) || []).filter(
+    (timestamp) => now - timestamp < PAYMENT_SESSION_WINDOW_MS
+  );
+  if (recent.length >= PAYMENT_SESSION_LIMIT) {
+    res.set("Retry-After", String(Math.ceil(PAYMENT_SESSION_WINDOW_MS / 1000)));
+    return res.status(429).json({ error: "too_many_payment_attempts" });
+  }
+  recent.push(now);
+  paymentSessionAttempts.set(clientId, recent);
+  return next();
+}
+
+app.post("/api/codapay/create-component-session", paymentSessionRateLimit, async (req, res) => {
   if (!CODAPAY_API_KEY || !CODAPAY_PROJECT_ID) {
     return res.status(503).json({ error: "codapay_not_configured" });
   }

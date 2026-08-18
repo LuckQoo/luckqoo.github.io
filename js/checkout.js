@@ -38,7 +38,7 @@
       return;
     }
     if (cart.some((item) => item.recurring)) {
-      showMessage("Codapay 尚未支援此網站的自動月繳主機方案，請先移除主機方案或聯絡我們。", true);
+      showMessage("安全付款服務尚未支援此網站的自動月繳主機方案，請先移除主機方案或聯絡我們。", true);
       return;
     }
     renderCartSummary();
@@ -53,15 +53,15 @@
       if (!contentType.includes("application/json")) {
         throw new Error(
           response.status === 404
-            ? "Codapay 後端 API 尚未部署（HTTP 404）。"
-            : `Codapay 後端回應格式錯誤（HTTP ${response.status}）。`
+            ? "安全付款後端 API 尚未部署（HTTP 404）。"
+            : `安全付款後端回應格式錯誤（HTTP ${response.status}）。`
         );
       }
       const data = await response.json();
       if (!response.ok || !data.clientSecret) {
-        throw new Error(data.details || data.resultDesc || "無法建立 Codapay 付款工作階段。");
+        throw new Error(data.details || data.resultDesc || "無法建立安全付款工作階段。");
       }
-      if (typeof window.CodaCard !== "function") throw new Error("Codapay 安全元件載入失敗。");
+      if (typeof window.CodaCard !== "function") throw new Error("安全付款元件載入失敗。");
 
       const components = window.CodaCard().components({
         clientSecret: data.clientSecret,
@@ -83,7 +83,7 @@
       chargeComponent.on("processingCard", function (isSuccess, errorMessage) {
         submitBtn.disabled = true;
         if (isSuccess) {
-          showMessage("付款已送出，正在等待 Codapay 伺服器確認。", false);
+          showMessage("付款已送出，正在等待付款伺服器確認。", false);
           if (window.cartApi) window.cartApi.clearCart();
         } else {
           showMessage(errorMessage || "付款失敗，請檢查資料後再試。", true);
@@ -102,7 +102,7 @@
     } catch (error) {
       const paymentElement = document.getElementById("payment-element");
       if (paymentElement) {
-        paymentElement.textContent = "Codapay 付款服務尚未完成後端部署，請稍後再試。";
+        paymentElement.textContent = "安全付款服務尚未完成後端部署，請稍後再試。";
       }
       showMessage(error.message || "無法載入付款頁面。", true);
       submitBtn.disabled = true;
