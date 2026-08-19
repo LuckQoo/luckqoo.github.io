@@ -3,44 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>結帳 | epoch shop</title>
+  <title>安全結帳 | EPOCH SHOP LLC</title>
   <link rel="icon" href="/eshop.ico" type="image/x-icon" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../css/site.css?v=2" />
+  <link rel="stylesheet" href="../css/site.css?v=3" />
   <style>
-    #payment-form { max-width: 420px; margin: 1.5rem auto 0; }
-    #payment-element { margin: 1rem 0; }
-    #payment-form button#submit {
-      width: 100%;
-      background: linear-gradient(90deg, #21d46a, #74ffab);
-      color: #04260f;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-    #payment-message {
-      margin-top: 0.8rem;
-      color: var(--danger);
-      text-align: center;
-    }
+    #payment-form { max-width: 520px; margin: 1.5rem auto 0; }
+    #payment-form #submit { width: 100%; }
+    #payment-form #submit:disabled { cursor: not-allowed; opacity: 0.55; }
+    #payment-message { margin-top: 0.8rem; text-align: center; }
     #payment-message.success { color: var(--accent); }
     .hidden { display: none; }
-    #spinner {
-      width: 1rem;
-      height: 1rem;
-      border-radius: 50%;
-      border: 2px solid rgba(4, 38, 15, 0.4);
-      border-top-color: #04260f;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
   <canvas id="matrix"></canvas>
   <div class="bg-mask"></div>
-
   <header class="site-header">
     <nav class="nav-wrap">
       <a class="brand-link" href="../index.html">EPOCH SHOP</a>
@@ -48,44 +26,29 @@
       <a class="menu-btn" href="products.html">虛擬模型</a>
       <a class="menu-btn" href="software.html">軟體 / 應用</a>
       <a class="menu-btn" href="hosting.html">虛擬主機</a>
-      <a class="menu-btn" href="https://epoch-shop.com" target="_blank" rel="noopener">AI Chat</a>
       <a class="menu-btn" href="cart.html">購物車（<span data-cart-count>0</span>）</a>
-      <a class="menu-btn" href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">生活小品</a>
-      <a class="coffee-btn" href="https://www.buymeacoffee.com/haastyu" target="_blank" rel="noopener"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a Coffee&emoji=☕&slug=haastyu&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy me a coffee" /></a>
-      </div>
       <a class="menu-btn" href="contact.html">聯絡我們</a>
     </nav>
   </header>
-
   <main>
     <section class="hero" style="text-align:center;">
-      <h1 class="cyber-title">結帳</h1>
-      <p class="subtitle">請填寫付款資訊完成購買。</p>
-
-      <div id="checkout-cart-summary" style="max-width: 420px; margin: 1rem auto 0; text-align: left;"></div>
-
+      <h1 class="cyber-title">安全結帳</h1>
+      <p class="subtitle">請確認訂單內容並閱讀相關政策。付款將透過 PayPal 的安全頁面完成。</p>
+      <div id="checkout-cart-summary" class="card" style="max-width:520px;margin:1rem auto 0;text-align:left;"></div>
       <form id="payment-form">
-        <div id="payment-element">
-          <p class="subtitle">正在載入安全付款欄位...</p>
-        </div>
-        <button id="submit" disabled>
-          <div class="spinner hidden" id="spinner"></div>
-          <span id="button-text">付款</span>
-        </button>
-        <div id="payment-message" class="hidden"></div>
+        <label class="checkout-consent">
+          <input type="checkbox" id="policy-consent" />
+          <span>我已閱讀並同意 <a href="terms.html" target="_blank">服務條款</a>、<a href="privacy.html" target="_blank">隱私政策</a>、<a href="refund.html" target="_blank">退款政策</a>及<a href="delivery.html" target="_blank">交付政策</a>。</span>
+        </label>
+        <button id="submit" type="submit" disabled>前往 PayPal 安全付款</button>
+        <div id="payment-message" class="subtitle"></div>
       </form>
     </section>
   </main>
-
-    <footer class="site-footer">© <span id="year"></span> EPOCH SHOP<br />Business Address: 30 N Gould St Ste R, Sheridan, WY 82801, United States<br />Contact Phone: +1 (307) 204-5345</footer>
-
-  <script src="https://js.codapayments.com/8.0.0/coda-card.min.js"></script>
+  <footer class="site-footer">© <span id="year"></span> EPOCH SHOP LLC<br />Business Address: 30 N Gould St Ste R, Sheridan, WY 82801, United States<br />Contact: <a href="mailto:yukine@diary-city.com">yukine@diary-city.com</a> · <a href="tel:+13073037141">+1 (307) 303-7141</a><div class="footer-links"><a href="terms.html">服務條款</a><a href="privacy.html">隱私政策</a><a href="refund.html">退款政策</a><a href="delivery.html">交付政策</a></div></footer>
   <script src="../js/matrix.js"></script>
   <script src="../js/site.js"></script>
   <script src="../js/cart.js"></script>
-  <script src="../js/checkout.js?v=3"></script>
-
-  <script src="../assets/jquery.min.js?v=3.3.1"></script>
-  <script src="../assets/jquery-ui.min.js?v=1.12.1"></script>
+  <script src="../js/checkout.js?v=4"></script>
 </body>
 </html>

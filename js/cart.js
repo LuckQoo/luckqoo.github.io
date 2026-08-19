@@ -42,7 +42,7 @@ function cartTotal() {
   return getCart().reduce((sum, item) => sum + item.price * item.qty, 0);
 }
 
-// Stripe can't check out one-time items and subscriptions in the same session.
+// One-time purchases and recurring subscriptions use separate checkout sessions.
 function hasMixedCart() {
   const cart = getCart();
   const hasOneTime = cart.some((item) => !item.recurring);

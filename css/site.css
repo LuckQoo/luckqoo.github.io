@@ -394,6 +394,48 @@ textarea {
   color: #8bc79f;
 }
 
+.site-footer a,
+.policy-content a,
+.checkout-consent a {
+  color: var(--accent-soft);
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-top: 0.55rem;
+}
+
+.policy-content {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.policy-content h2 {
+  margin-top: 1.8rem;
+  color: var(--accent-soft);
+}
+
+.policy-content p {
+  line-height: 1.85;
+}
+
+.checkout-consent {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem;
+  align-items: start;
+  margin: 1rem 0;
+  text-align: left;
+  line-height: 1.6;
+}
+
+.checkout-consent input {
+  margin-top: 0.3rem;
+}
+
 .waifu {
   z-index: 9999 !important;
   left: 14px !important;
@@ -530,4 +572,3 @@ body:not(.assistant-open) #waifu-head-bubble {
     position: absolute;
   }
 }
-
