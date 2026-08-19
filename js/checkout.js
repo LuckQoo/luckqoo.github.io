@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  // 建立 PayPal Business Payment Link 後，將完整連結填入此處。
-  const PAYPAL_PAYMENT_LINK = "";
+  // 付款服務啟用後，將完整的安全付款連結填入此處。
+  const PAYMENT_LINK = "";
   const cart = window.cartApi ? window.cartApi.getCart() : [];
   const form = document.getElementById("payment-form");
   const consent = document.getElementById("policy-consent");
@@ -27,13 +27,13 @@
   }
 
   function updateButton() {
-    submitBtn.disabled = !cart.length || !consent.checked || !PAYPAL_PAYMENT_LINK;
-    if (!PAYPAL_PAYMENT_LINK) {
-      messageEl.textContent = "PayPal 安全付款連結設定中，完成後即可付款。";
+    submitBtn.disabled = !cart.length || !consent.checked || !PAYMENT_LINK;
+    if (!PAYMENT_LINK) {
+      messageEl.textContent = "安全付款連結設定中，完成後即可付款。";
     } else if (!consent.checked) {
       messageEl.textContent = "請先閱讀並同意相關政策。";
     } else {
-      messageEl.textContent = "您將前往 PayPal 完成安全付款。";
+      messageEl.textContent = "您將前往安全付款頁面完成付款。";
     }
   }
 
@@ -41,7 +41,7 @@
   form.addEventListener("submit", function (event) {
     event.preventDefault();
     if (submitBtn.disabled) return;
-    window.location.assign(PAYPAL_PAYMENT_LINK);
+    window.location.assign(PAYMENT_LINK);
   });
 
   renderSummary();
