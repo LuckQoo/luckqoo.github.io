@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "epoch-paypal-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-26",
+  "routes": [
+    { "pattern": "api.epoch-shop.shop/*", "zone_name": "epoch-shop.shop" }
+  ],
+  "vars": {
+    "PAYPAL_ENV": "live"
+  }
+}
