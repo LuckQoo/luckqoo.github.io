@@ -53,6 +53,14 @@ const CODAPAY_BASE_URL = CODAPAY_ENV === "production"
   : "https://sandbox.codapayments.com/airtime/api/restful/v2.0/Payment";
 const CODASHOP_SECRET_KEY = process.env.CODASHOP_SECRET_KEY || "";
 
+const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID || "";
+const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET || "";
+const PAYPAL_ENV = process.env.PAYPAL_ENV === "live" ? "live" : "sandbox";
+const PAYPAL_API_BASE = PAYPAL_ENV === "live"
+  ? "https://api-m.paypal.com"
+  : "https://api-m.sandbox.paypal.com";
+const pendingPayPalOrders = new Map();
+
 const PAYMENT_SESSION_WINDOW_MS = 10 * 60 * 1000;
 const PAYMENT_SESSION_LIMIT = 10;
 const paymentSessionAttempts = new Map();
@@ -67,6 +75,34 @@ function getStripeContext(req) {
     return { stripe: stripeTest, publishableKey: STRIPE_PUBLISHABLE_KEY_TEST };
   }
   return { stripe: stripeLive, publishableKey: STRIPE_PUBLISHABLE_KEY };
+}
+
+async function getPayPalAccessToken() {
+  if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) throw new Error("paypal_not_configured");
+  const credentials = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString("base64");
+  const response = await fetch(`${PAYPAL_API_BASE}/v1/oauth2/token`, {
+    method: "POST",
+    headers: { Authorization: `Basic ${credentials}`, "Content-Type": "application/x-www-form-urlencoded" },
+    body: "grant_type=client_credentials"
+  });
+  const data = await response.json();
+  if (!response.ok || !data.access_token) throw new Error(data.error_description || "paypal_auth_failed");
+  return data.access_token;
+}
+
+async function callPayPal(pathname, options = {}) {
+  const accessToken = await getPayPalAccessToken();
+  const response = await fetch(`${PAYPAL_API_BASE}${pathname}`, {
+    ...options,
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json", ...(options.headers || {}) }
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.message || "paypal_request_failed");
+    error.status = response.status;
+    throw error;
+  }
+  return data;
 }
 
 // Server-side price list — never trust a price/amount sent from the client.
@@ -628,7 +664,57 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
 
 app.get("/api/config", (req, res) => {
   const { publishableKey } = getStripeContext(req);
-  res.json({ publishableKey, devMode: isDevMode(req) });
+  res.json({ publishableKey, devMode: isDevMode(req), paypalClientId: PAYPAL_CLIENT_ID, paypalCurrency: "USD", paypalEnvironment: PAYPAL_ENV });
+});
+
+app.post("/api/paypal/shop/orders", paymentSessionRateLimit, async (req, res) => {
+  if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) return res.status(501).json({ error: "paypal_not_configured" });
+  const items = Array.isArray(req.body?.items) ? req.body.items : [];
+  if (!items.length) return res.status(400).json({ error: "empty_cart" });
+  const paypalItems = [];
+  let totalCents = 0;
+  for (const item of items) {
+    const qty = Number(item?.qty);
+    // PayPal only collects the amount due at this checkout. Hosting renewal,
+    // rental terms, and contract state remain entirely outside PayPal.
+    const product = PRODUCTS[item?.id] || HOSTING_PLANS[item?.id];
+    if (!product || !Number.isInteger(qty) || qty < 1 || qty > 20) {
+      return res.status(400).json({ error: "invalid_item", details: item?.id });
+    }
+    totalCents += product.amount * qty;
+    paypalItems.push({ name: product.name, quantity: String(qty), unit_amount: { currency_code: "USD", value: (product.amount / 100).toFixed(2) } });
+  }
+  try {
+    const order = await callPayPal("/v2/checkout/orders", {
+      method: "POST",
+      headers: { "PayPal-Request-Id": crypto.randomUUID() },
+      body: JSON.stringify({
+        intent: "CAPTURE",
+        purchase_units: [{
+          description: "EPOCH SHOP checkout",
+          amount: { currency_code: "USD", value: (totalCents / 100).toFixed(2), breakdown: { item_total: { currency_code: "USD", value: (totalCents / 100).toFixed(2) } } },
+          items: paypalItems
+        }],
+        application_context: { shipping_preference: "NO_SHIPPING", user_action: "PAY_NOW" }
+      })
+    });
+    pendingPayPalOrders.set(order.id, Date.now());
+    res.json({ id: order.id });
+  } catch (err) {
+    res.status(err.status || 502).json({ error: "paypal_create_failed", details: err.message });
+  }
+});
+
+app.post("/api/paypal/orders/:orderId/capture", async (req, res) => {
+  const createdAt = pendingPayPalOrders.get(req.params.orderId);
+  if (!createdAt || Date.now() - createdAt > 3 * 60 * 60 * 1000) return res.status(400).json({ error: "unknown_or_expired_order" });
+  try {
+    const capture = await callPayPal(`/v2/checkout/orders/${encodeURIComponent(req.params.orderId)}/capture`, { method: "POST", headers: { "PayPal-Request-Id": crypto.randomUUID() } });
+    pendingPayPalOrders.delete(req.params.orderId);
+    res.json({ id: capture.id, status: capture.status });
+  } catch (err) {
+    res.status(err.status || 502).json({ error: "paypal_capture_failed", details: err.message });
+  }
 });
 
 // Creates a Checkout Session (ui_mode: "elements") for the AI Chat monthly

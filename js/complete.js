@@ -70,7 +70,17 @@
   }
 
   async function initialize() {
-    const sessionId = new URLSearchParams(window.location.search).get("session_id");
+    const params = new URLSearchParams(window.location.search);
+    const paypalOrderId = params.get("paypal_order_id");
+    if (paypalOrderId) {
+      statusIcon.classList.add("status-ok");
+      statusText.textContent = "PayPal 付款成功，感謝您的購買！";
+      detailsTable.classList.add("hidden");
+      viewDetails.classList.add("hidden");
+      if (window.cartApi) window.cartApi.clearCart();
+      return;
+    }
+    const sessionId = params.get("session_id");
     if (!sessionId) {
       setErrorState();
       return;
