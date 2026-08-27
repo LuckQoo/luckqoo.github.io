@@ -18,6 +18,7 @@ start-backend.bat
 .projects/vault
 .projects/state.test.json
 .projects/state.local.test.json
+.wrangler/
 .env
 .env.*
 !.env.example

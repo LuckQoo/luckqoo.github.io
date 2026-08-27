@@ -8,5 +8,12 @@
   ],
   "vars": {
     "PAYPAL_ENV": "live"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "epoch-paypal-orders",
+      "database_id": "3ce6dd82-3018-426a-a60f-eeff0181d496"
+    }
+  ]
 }
