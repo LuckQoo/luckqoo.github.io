@@ -572,3 +572,29 @@ body:not(.assistant-open) #waifu-head-bubble {
     position: absolute;
   }
 }
+.paypal-single-button {
+  text-align: center;
+  border: none;
+  border-radius: .25rem;
+  min-width: 11.625rem;
+  padding: 0 2rem;
+  height: 2.625rem;
+  font-weight: 700;
+  background: #ffd140;
+  color: #000;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.25rem;
+  cursor: pointer;
+}
+
+.paypal-single-form {
+  display: inline-grid;
+  justify-items: center;
+  align-content: start;
+  gap: .5rem;
+}
+
+.paypal-single-form > img { max-width: 100%; }
+.paypal-powered-by { font-size: .75rem; }
+.paypal-powered-by img { height: .875rem; vertical-align: middle; }
