@@ -50,7 +50,7 @@
         updateButton();
       }
     });
-    messageEl.textContent = "付款資料將由 Codapay 的安全頁面收集；本站不會接觸或儲存卡號。";
+    messageEl.textContent = "";
     updateButton();
   }
   initCodapay();
