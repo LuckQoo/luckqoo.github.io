@@ -77,7 +77,7 @@ async function createOrder(request, env, kind) {
   const unit = kind === "shop"
     ? { custom_id: customId, description: "EPOCH SHOP checkout", amount: { currency_code: "USD", value: details.value, breakdown: { item_total: { currency_code: "USD", value: details.value } } }, items: details.items }
     : { custom_id: customId, description: "Support Epoch AI training", amount: { currency_code: "USD", value: details.value } };
-  const order = await paypal(env, "/v2/checkout/orders", { method: "POST", headers: { "PayPal-Request-Id": requestId }, body: JSON.stringify({ intent: "CAPTURE", purchase_units: [unit], payment_source: { paypal: { experience_context: { shipping_preference: "NO_SHIPPING", user_action: "PAY_NOW" } } } }) });
+  const order = await paypal(env, "/v2/checkout/orders", { method: "POST", headers: { "PayPal-Request-Id": requestId }, body: JSON.stringify({ intent: "CAPTURE", purchase_units: [unit] }) });
   await saveOrder(env, order, kind, customId, details.cents, requestId);
   return json(request, { id: order.id });
 }

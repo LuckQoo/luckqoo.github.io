@@ -13,7 +13,10 @@
     #payment-form #submit:disabled { cursor: not-allowed; opacity: 0.55; }
     #payment-message { margin-top: 0.8rem; text-align: center; }
     #payment-message.success { color: var(--accent); }
-    #paypal-button-container { min-height: 45px; margin-top: 1rem; }
+    .card-fields { display: grid; gap: .75rem; margin-top: 1rem; text-align: left; }
+    .card-fields[hidden] { display: none; }
+    .card-fields label { display: grid; gap: .35rem; }
+    .paypal-card-field { min-height: 46px; padding: 0 .75rem; border: 1px solid rgba(255,255,255,.22); border-radius: 8px; background: #fff; }
     .hidden { display: none; }
   </style>
 </head>
@@ -41,8 +44,13 @@
           <input type="checkbox" id="policy-consent" />
           <span>我已閱讀並同意 <a href="terms.html" target="_blank">服務條款</a>、<a href="privacy.html" target="_blank">隱私政策</a>、<a href="refund.html" target="_blank">退款政策</a>及<a href="delivery.html" target="_blank">交付政策</a>。</span>
         </label>
-        <div id="paypal-button-container"></div>
-        <button id="submit" type="submit" disabled hidden>前往安全付款</button>
+        <div id="paypal-card-fields" class="card-fields" hidden>
+          <label>持卡人姓名<div id="card-name-field-container" class="paypal-card-field"></div></label>
+          <label>卡號<div id="card-number-field-container" class="paypal-card-field"></div></label>
+          <label>有效期限<div id="card-expiry-field-container" class="paypal-card-field"></div></label>
+          <label>安全碼<div id="card-cvv-field-container" class="paypal-card-field"></div></label>
+        </div>
+        <button id="submit" class="button primary" type="submit" disabled>使用信用卡／簽帳卡付款</button>
         <div id="payment-message" class="subtitle"></div>
       </form>
     </section>
@@ -51,6 +59,6 @@
   <script src="../js/matrix.js"></script>
   <script src="../js/site.js"></script>
   <script src="../js/cart.js"></script>
-  <script src="../js/checkout.js?v=6"></script>
+  <script src="../js/checkout.js?v=7"></script>
 </body>
 </html>

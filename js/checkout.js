@@ -5,8 +5,10 @@
   const consent = document.getElementById("policy-consent");
   const messageEl = document.getElementById("payment-message");
   const summary = document.getElementById("checkout-cart-summary");
-  const container = document.getElementById("paypal-button-container");
-  if (!consent || !messageEl || !summary || !container) return;
+  const form = document.getElementById("payment-form");
+  const fieldsContainer = document.getElementById("paypal-card-fields");
+  const submit = document.getElementById("submit");
+  if (!consent || !messageEl || !summary || !form || !fieldsContainer || !submit) return;
   function renderSummary() {
     if (!cart.length) {
       summary.innerHTML = '<p class="subtitle">購物車目前是空的，請先選購商品。</p>';
@@ -22,16 +24,8 @@
     if (!response.ok) throw new Error(data.details || data.error || "付款服務發生錯誤");
     return data;
   }
-  function renderButtons() {
-    window.paypal.Buttons({
-      style: { layout: "vertical", shape: "rect", label: "paypal" },
-      onClick: (_data, actions) => {
-        if (!consent.checked) {
-          messageEl.textContent = "請先閱讀並同意購買政策。";
-          return actions.reject();
-        }
-        return actions.resolve();
-      },
+  async function renderCardFields() {
+    const cardFields = window.paypal.CardFields({
       createOrder: async () => {
         messageEl.textContent = "正在建立安全訂單…";
         const order = await request("/api/paypal/shop/orders", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: cart.map(({ id, qty }) => ({ id, qty })) }) });
@@ -44,10 +38,37 @@
         if (window.cartApi) window.cartApi.clearCart();
         window.location.assign(`complete.html?paypal_order_id=${encodeURIComponent(capture.id)}`);
       },
-      onCancel: () => { messageEl.textContent = "付款已取消，購物車內容仍為您保留。"; },
       onError: (error) => { messageEl.textContent = `PayPal 付款失敗：${error.message || "請稍後再試"}`; }
-    }).render(container);
-    messageEl.textContent = "勾選同意政策後，即可使用 PayPal 安全結帳。";
+    });
+    if (!cardFields.isEligible()) {
+      messageEl.textContent = "此商家帳戶目前尚未啟用 PayPal 信用卡／簽帳卡進階付款，請聯絡商家。";
+      return;
+    }
+    await Promise.all([
+      cardFields.NameField().render("#card-name-field-container"),
+      cardFields.NumberField().render("#card-number-field-container"),
+      cardFields.ExpiryField().render("#card-expiry-field-container"),
+      cardFields.CVVField().render("#card-cvv-field-container")
+    ]);
+    fieldsContainer.hidden = false;
+    submit.disabled = !consent.checked;
+    consent.addEventListener("change", () => { submit.disabled = !consent.checked; });
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!consent.checked) {
+        messageEl.textContent = "請先閱讀並同意購買政策。";
+        return;
+      }
+      submit.disabled = true;
+      messageEl.textContent = "正在安全處理卡片付款…";
+      try {
+        await cardFields.submit();
+      } catch (error) {
+        messageEl.textContent = `卡片付款失敗：${error.message || "請檢查資料後再試"}`;
+        submit.disabled = false;
+      }
+    });
+    messageEl.textContent = "請輸入信用卡或簽帳卡資料；本頁不提供 PayPal 帳戶付款。";
   }
   async function initPayPal() {
     renderSummary();
@@ -56,8 +77,8 @@
       const config = await request("/api/config");
       if (!config.paypalClientId) throw new Error("PayPal 尚未完成商家設定。請稍後再試。");
       const script = document.createElement("script");
-      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(config.paypalClientId)}&currency=USD&intent=capture&components=buttons`;
-      script.onload = renderButtons;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(config.paypalClientId)}&currency=USD&intent=capture&components=card-fields`;
+      script.onload = renderCardFields;
       script.onerror = () => { messageEl.textContent = "無法載入 PayPal 安全付款元件。"; };
       document.head.appendChild(script);
     } catch (error) {
