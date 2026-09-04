@@ -3,9 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="refresh" content="0;url=products.html" />
-  <title>前往商品頁 | EPOCH SHOP</title>
-  <script>localStorage.removeItem("epoch_shop_cart"); window.location.replace("products.html");</script>
+  <title>安全結帳 | EPOCH SHOP LLC</title>
+  <link rel="icon" href="/eshop.ico" type="image/x-icon" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/site.css?v=3" />
+  <style>
+    #payment-form { max-width: 520px; margin: 1.5rem auto 0; }
+    #payment-form #submit { width: 100%; }
+    #payment-form #submit:disabled { cursor: not-allowed; opacity: 0.55; }
+    #payment-message { margin-top: 0.8rem; text-align: center; }
+    #payment-message.success { color: var(--accent); }
+    .card-fields { display: grid; gap: .75rem; margin-top: 1rem; text-align: left; }
+    .card-fields label { display: grid; gap: .35rem; }
+    .card-fields input { box-sizing: border-box; width: 100%; min-height: 46px; padding: .7rem .8rem; border: 1px solid rgba(255,255,255,.22); border-radius: 8px; font: inherit; }
+    .card-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    @media (max-width: 560px) { .card-field-row { grid-template-columns: 1fr; } }
+    .hidden { display: none; }
+  </style>
 </head>
-<body><p>舊結帳頁已停用，正在前往商品頁。若未自動跳轉，請<a href="products.html">按此前往</a>。</p></body>
+<body>
+  <canvas id="matrix"></canvas>
+  <div class="bg-mask"></div>
+  <header class="site-header">
+    <nav class="nav-wrap">
+      <a class="brand-link" href="../index.html">EPOCH SHOP</a>
+      <a class="menu-btn" href="../index.html">首頁</a>
+      <a class="menu-btn" href="products.html">虛擬模型</a>
+      <a class="menu-btn" href="software.html">軟體 / 應用</a>
+      <a class="menu-btn" href="hosting.html">虛擬主機</a>
+      <a class="menu-btn" href="cart.html">購物車（<span data-cart-count>0</span>）</a>
+      <a class="menu-btn" href="contact.html">聯絡我們</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero" style="text-align:center;">
+      <h1 class="cyber-title">安全結帳</h1>
+      <p class="subtitle">請確認訂單內容。付款欄位將在新的支付服務商完成串接後啟用。</p>
+      <div id="checkout-cart-summary" class="card" style="max-width:520px;margin:1rem auto 0;text-align:left;"></div>
+      <form id="payment-form">
+        <div class="card-fields">
+          <label>Email<input id="customer-email" type="email" autocomplete="email" required /></label>
+          <label>持卡人姓名<input id="cardholder-name" type="text" autocomplete="cc-name" required /></label>
+          <label>卡號<input id="card-number" type="text" inputmode="numeric" autocomplete="cc-number" required /></label>
+          <div class="card-field-row">
+            <label>到期日<input id="card-expiry" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" required /></label>
+            <label>驗證碼<input id="card-cvc" type="text" inputmode="numeric" autocomplete="cc-csc" required /></label>
+          </div>
+          <label>郵遞區號<input id="postal-code" type="text" inputmode="numeric" autocomplete="postal-code" required /></label>
+        </div>
+        <button id="submit" class="button primary" type="submit" disabled>等待新支付服務商啟用</button>
+        <div id="payment-message" class="subtitle"></div>
+      </form>
+    </section>
+  </main>
+  <footer class="site-footer">© <span id="year"></span> EPOCH SHOP LLC<br />Business Address: 30 N Gould St Ste R, Sheridan, WY 82801, United States<br />Contact: <a href="mailto:yukine@diary-city.com">yukine@diary-city.com</a> · <a href="tel:+13073037141">+1 (307) 303-7141</a><div class="footer-links"><a href="terms.html">服務條款</a><a href="privacy.html">隱私政策</a><a href="refund.html">退款政策</a><a href="delivery.html">交付政策</a></div></footer>
+  <script src="../js/matrix.js"></script>
+  <script src="../js/site.js"></script>
+  <script src="../js/cart.js"></script>
+  <script>
+    const items = window.cartApi.getCart();
+    const summary = document.getElementById("checkout-cart-summary");
+    summary.innerHTML = items.length
+      ? items.map((item) => `<div class="cart-row"><div>${item.name} × ${item.qty}</div><div>$${item.price * item.qty}${item.recurring ? "/月" : ""}</div></div>`).join("") + `<p class="price">總計：$${window.cartApi.cartTotal()}</p>`
+      : '<p class="subtitle">購物車目前是空的，請先選購商品。</p>';
+    document.getElementById("payment-form").addEventListener("submit", (event) => event.preventDefault());
+    document.getElementById("payment-message").textContent = "尚未選定新的支付服務商，不會傳送或儲存卡片資料。";
+  </script>
+</body>
 </html>
