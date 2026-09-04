@@ -7,7 +7,9 @@
     { "pattern": "api.epoch-shop.shop/*", "zone_name": "epoch-shop.shop" }
   ],
   "vars": {
-    "PAYPAL_ENV": "live"
+    "PAYPAL_ENV": "live",
+    "CODAPAY_ENV": "production",
+    "CODAPAY_PROJECT_ID": "3912"
   },
   "d1_databases": [
     {

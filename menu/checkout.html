@@ -38,20 +38,14 @@
   <main>
     <section class="hero" style="text-align:center;">
       <h1 class="cyber-title">安全結帳</h1>
-      <p class="subtitle">請確認訂單內容。付款欄位將在新的支付服務商完成串接後啟用。</p>
+      <p class="subtitle">請確認訂單內容。按下付款後將前往 Codapay 的安全付款頁。</p>
       <div id="checkout-cart-summary" class="card" style="max-width:520px;margin:1rem auto 0;text-align:left;"></div>
       <form id="payment-form">
         <div class="card-fields">
           <label>Email<input id="customer-email" type="email" autocomplete="email" required /></label>
-          <label>持卡人姓名<input id="cardholder-name" type="text" autocomplete="cc-name" required /></label>
-          <label>卡號<input id="card-number" type="text" inputmode="numeric" autocomplete="cc-number" required /></label>
-          <div class="card-field-row">
-            <label>到期日<input id="card-expiry" type="text" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" required /></label>
-            <label>驗證碼<input id="card-cvc" type="text" inputmode="numeric" autocomplete="cc-csc" required /></label>
-          </div>
-          <label>郵遞區號<input id="postal-code" type="text" inputmode="numeric" autocomplete="postal-code" required /></label>
+          <label><span><input id="policy-consent" type="checkbox" required /> 我已閱讀並同意<a href="terms.html" target="_blank" rel="noopener">服務條款</a>、<a href="privacy.html" target="_blank" rel="noopener">隱私政策</a>與<a href="refund.html" target="_blank" rel="noopener">退款政策</a></span></label>
         </div>
-        <button id="submit" class="button primary" type="submit" disabled>等待新支付服務商啟用</button>
+        <button id="submit" class="button primary" type="submit" disabled>使用 Codapay 安全付款</button>
         <div id="payment-message" class="subtitle"></div>
       </form>
     </section>
@@ -60,14 +54,6 @@
   <script src="../js/matrix.js"></script>
   <script src="../js/site.js"></script>
   <script src="../js/cart.js"></script>
-  <script>
-    const items = window.cartApi.getCart();
-    const summary = document.getElementById("checkout-cart-summary");
-    summary.innerHTML = items.length
-      ? items.map((item) => `<div class="cart-row"><div>${item.name} × ${item.qty}</div><div>$${item.price * item.qty}${item.recurring ? "/月" : ""}</div></div>`).join("") + `<p class="price">總計：$${window.cartApi.cartTotal()}</p>`
-      : '<p class="subtitle">購物車目前是空的，請先選購商品。</p>';
-    document.getElementById("payment-form").addEventListener("submit", (event) => event.preventDefault());
-    document.getElementById("payment-message").textContent = "尚未選定新的支付服務商，不會傳送或儲存卡片資料。";
-  </script>
+  <script src="../js/checkout.js?v=4"></script>
 </body>
 </html>

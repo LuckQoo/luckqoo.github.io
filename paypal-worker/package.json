@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "wrangler": "^4.34.0"
+  },
+  "dependencies": {
+    "js-md5": "^0.9.2"
   }
 }
