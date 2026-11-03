@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>AI 聊天室 — Epoch AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css?v=2">
+<link rel="stylesheet" href="assets/css/chat-widget.css?v=2">
+<style>
+	.ai-chat-layout {
+		display: grid;
+		grid-template-columns: 420px 1fr;
+		gap: 1rem;
+		align-items: start;
+	}
+	.ai-chat-layout .waifu {
+		position: relative;
+		width: 420px;
+		height: 380px;
+		overflow: hidden;
+	}
+	.ai-chat-layout .waifu #live2d-canvas {
+		width: 100%;
+		height: 100%;
+		display: block;
+	}
+	@media (max-width: 860px) {
+		.ai-chat-layout {
+			grid-template-columns: 1fr;
+			justify-items: center;
+		}
+	}
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<div class="bg-mask"></div>
+
+<nav class="site-nav">
+	<div class="container">
+		<a class="site-logo" href="index.html">EPOCH AI</a>
+		<ul class="nav-links">
+				<li><a href="../index.html">首頁</a></li>
+			<li><a href="index.html#features">功能特色</a></li>
+			<li><a href="pricing.html">贊助</a></li>
+			<li><a class="active" href="chat.html">AI 聊天室</a></li>
+			<li><a href="account.html">會員中心</a></li>
+		</ul>
+		<div class="nav-cta" id="clerk-auth-slot">
+			<a class="btn btn-ghost" href="#login">登入</a>
+			<a class="btn btn-primary" href="chat.html">立即註冊</a>
+		</div>
+	</div>
+</nav>
+
+<div class="chat-page-wrap">
+	<div class="container">
+
+		<div id="chat-locked" class="epoch-ai-chat-locked" style="display:none">
+			<p lang="zh-TW">請先註冊或登入帳號才能使用 AI 聊天室。</p>
+			<p lang="en"><em>Please register or log in to use the AI chat.</em></p>
+			<p><a class="epoch-ai-chat-cta" href="#" id="chat-locked-cta">前往註冊 / 登入 / Register or log in</a></p>
+		</div>
+
+		<div id="chat-signed-in-area" style="display:none">
+
+		<div class="ai-chat-layout">
+			<div class="waifu">
+				<canvas id="live2d-canvas" class="live2d"></canvas>
+			</div>
+			<div class="epoch-ai-chat">
+				<div class="epoch-ai-chat-toolbar">
+					<button type="button" class="epoch-ai-chat-lang-toggle" id="chat-search-toggle" title="開啟後，回覆前會先搜尋 EPOCH 官網（epoch-shop.com）的內容">🔍 搜尋本站：關</button>
+				<button type="button" class="epoch-ai-chat-lang-toggle">EN</button>
+				</div>
+				<div class="epoch-ai-chat-messages" id="chat-messages">
+					<div class="epoch-ai-chat-msg epoch-ai-chat-msg--assistant">
+						<div class="epoch-ai-chat-bubble">你好，我是 EPOCH AI，我叫阿容。有什麼我可以幫忙的嗎？</div>
+					</div>
+				</div>
+				<form class="epoch-ai-chat-form" id="chat-form">
+					<textarea class="epoch-ai-chat-input" id="chat-input" rows="1" placeholder="輸入訊息..."></textarea>
+					<button type="submit" class="epoch-ai-chat-send" id="chat-send">送出</button>
+				</form>
+			</div>
+		</div>
+
+		</div>
+
+	</div>
+</div>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-links">
+			<a href="index.html">首頁</a>
+			<a href="pricing.html">贊助</a>
+			<a href="#terms">服務條款</a>
+			<a href="#privacy">隱私權政策</a>
+			<a href="../index.html">EPOCH SHOP 主站</a>
+		</div>
+		<div>© 2026 Epoch AI · epoch-shop.com</div>
+	</div>
+</footer>
+
+<script src="assets/js/matrix.js"></script>
+<script src="assets/js/clerk-config.js?v=5"></script>
+<script src="assets/js/api-config.js?v=4"></script>
+<script src="assets/js/auth.js?v=4"></script>
+<script>
+(function () {
+	var locked = document.getElementById('chat-locked');
+	var signedInArea = document.getElementById('chat-signed-in-area');
+	var lockedCta = document.getElementById('chat-locked-cta');
+
+	var live2dLoaded = false;
+	function ensureLive2d() {
+		if (live2dLoaded) return;
+		live2dLoaded = true;
+		var scripts = [
+			'assets/vendor/pixi.min.js',
+			'assets/vendor/live2dcubismcore.min.js',
+			'assets/vendor/pixi-live2d-cubism4.min.js',
+			'assets/vendor/pixi-live2d-display.min.js',
+			'assets/js/live2d-boy.js',
+		];
+		var i = 0;
+		function loadNext() {
+			if (i >= scripts.length) return;
+			var s = document.createElement('script');
+			s.src = scripts[i++];
+			s.onload = loadNext;
+			document.body.appendChild(s);
+		}
+		loadNext();
+	}
+
+	function applyAuthState(detail) {
+		if (detail.signedIn) {
+			locked.style.display = 'none';
+			signedInArea.style.display = '';
+			ensureLive2d();
+		} else {
+			locked.style.display = '';
+			signedInArea.style.display = 'none';
+		}
+	}
+
+	document.addEventListener('epoch-auth-ready', function (e) {
+		applyAuthState(e.detail);
+	});
+
+	lockedCta.addEventListener('click', function (e) {
+		e.preventDefault();
+		if (window.Clerk) {
+			window.Clerk.openSignIn({});
+		} else {
+			lockedCta.textContent = '登入功能尚未開放，請稍後再試';
+			lockedCta.style.pointerEvents = 'none';
+			lockedCta.style.opacity = '0.6';
+		}
+	});
+})();
+</script>
+<script>
+(function () {
+	var form = document.getElementById('chat-form');
+	var input = document.getElementById('chat-input');
+	var sendBtn = document.getElementById('chat-send');
+	var messages = document.getElementById('chat-messages');
+	var searchToggle = document.getElementById('chat-search-toggle');
+	var history = [];
+	var searchEnabled = false;
+
+	searchToggle.addEventListener('click', function () {
+		searchEnabled = !searchEnabled;
+		searchToggle.textContent = searchEnabled ? '🔍 搜尋本站：開' : '🔍 搜尋本站：關';
+		searchToggle.classList.toggle('active', searchEnabled);
+	});
+
+	function apiUrl(path) {
+		var base = window.EPOCH_API_BASE_URL || '';
+		return base + path;
+	}
+
+	// Enter 送出、Shift+Enter 換行（textarea 預設 Enter 只會換行，要自己接管）。
+	input.addEventListener('keydown', function (e) {
+		if (e.key === 'Enter' && !e.shiftKey) {
+			e.preventDefault();
+			if (typeof form.requestSubmit === 'function') {
+				form.requestSubmit();
+			} else {
+				form.dispatchEvent(new Event('submit', { cancelable: true }));
+			}
+		}
+	});
+
+	function appendMessage(role, text, withUpgradeLink) {
+		var wrapper = document.createElement('div');
+		wrapper.className = 'epoch-ai-chat-msg epoch-ai-chat-msg--' + role;
+		var bubble = document.createElement('div');
+		bubble.className = 'epoch-ai-chat-bubble';
+		bubble.textContent = text;
+		wrapper.appendChild(bubble);
+		messages.appendChild(wrapper);
+
+		if (withUpgradeLink) {
+			var link = document.createElement('a');
+			link.href = 'pricing.html';
+			link.className = 'epoch-ai-chat-cta';
+			link.style.marginTop = '6px';
+			link.style.display = 'inline-block';
+			link.textContent = '查看訂閱方案 / View plans';
+			var linkWrap = document.createElement('div');
+			linkWrap.className = 'epoch-ai-chat-msg epoch-ai-chat-msg--assistant';
+			linkWrap.appendChild(link);
+			messages.appendChild(linkWrap);
+		}
+
+		messages.scrollTop = messages.scrollHeight;
+	}
+
+	form.addEventListener('submit', async function (e) {
+		e.preventDefault();
+		var text = input.value.trim();
+		if (!text || !window.Clerk || !window.Clerk.session) return;
+
+		input.value = '';
+		sendBtn.disabled = true;
+		appendMessage('user', text);
+
+		try {
+			var token = await window.Clerk.session.getToken();
+			var res = await fetch(apiUrl('/api/chat'), {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': 'Bearer ' + token,
+				},
+				body: JSON.stringify({ message: text, history: history, enableSearch: searchEnabled }),
+			});
+
+			if (res.status === 403) {
+				appendMessage('assistant', '請先訂閱方案才能收到 AI 回覆，訂閱後即可立即開始對話。', true);
+				return;
+			}
+			if (res.status === 429) {
+				appendMessage('assistant', '今天的免費對話額度已經用完了，明天會自動重置，感謝你的耐心！');
+				return;
+			}
+			if (!res.ok) {
+				appendMessage('assistant', '發生錯誤，請稍後再試。');
+				return;
+			}
+
+			var data = await res.json();
+			history.push({ role: 'user', content: text });
+			history.push({ role: 'assistant', content: data.reply });
+			appendMessage('assistant', data.reply);
+		} catch (err) {
+			console.error('[epoch-ai-chat] chat request failed', err);
+			appendMessage('assistant', '無法連線至 AI 服務，請稍後再試。');
+		} finally {
+			sendBtn.disabled = false;
+		}
+	});
+})();
+</script>
+</body>
+</html>

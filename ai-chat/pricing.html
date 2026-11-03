@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>贊助 — Epoch AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css?v=2">
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<div class="bg-mask"></div>
+
+<nav class="site-nav">
+	<div class="container">
+		<a class="site-logo" href="index.html">EPOCH AI</a>
+		<ul class="nav-links">
+				<li><a href="../index.html">首頁</a></li>
+			<li><a href="index.html#features">功能特色</a></li>
+			<li><a class="active" href="pricing.html">贊助</a></li>
+			<li><a href="chat.html">AI 聊天室</a></li>
+			<li><a href="account.html">會員中心</a></li>
+		</ul>
+		<div class="nav-cta" id="clerk-auth-slot">
+			<a class="btn btn-ghost" href="#login">登入</a>
+			<a class="btn btn-primary" href="#register">立即註冊</a>
+		</div>
+	</div>
+</nav>
+
+<header class="hero" style="padding-bottom:48px">
+	<div class="container">
+		<span class="eyebrow">訓練中 · 目前完全免費</span>
+		<h1>阿容還在訓練，先免費開放使用</h1>
+		<p>AI 聊天室目前不收費，登入即可使用。喜歡的話歡迎贊助支持訓練，訓練完成、正式上線後將開始收取訂閱費用。</p>
+	</div>
+</header>
+
+<section class="section" style="border-top:none">
+	<div class="container">
+		<div class="pricing-grid">
+			<div class="price-card featured">
+				<span class="badge">現在使用</span>
+				<h3>免費使用中</h3>
+				<div class="price">US$0 <span>/ 訓練期間</span></div>
+				<ul>
+					<li>登入即可與阿容對話</li>
+					<li>中英文雙語介面</li>
+					<li>協助測試、意見回饋歡迎</li>
+				</ul>
+				<a class="btn btn-primary btn-block" href="chat.html">前往 AI 聊天室</a>
+			</div>
+			<div class="price-card">
+				<h3>贊助支持訓練</h3>
+				<div class="price">自由金額</div>
+				<ul>
+					<li>加速模型訓練與功能開發</li>
+					<li>不是訂閱，單次贊助即可</li>
+					<li>透過 PayPal 安全處理信用卡／簽帳卡</li>
+				</ul>
+				<label for="paypal-donation-amount">贊助金額（USD）</label>
+				<input id="paypal-donation-amount" type="number" min="5" max="1000" step="1" value="10" inputmode="decimal" style="width:100%;box-sizing:border-box;margin:.6rem 0;padding:.8rem;border-radius:8px">
+				<div id="paypal-card-fields" class="paypal-card-fields" hidden>
+					<label>持卡人姓名<div id="donation-card-name" class="paypal-card-field"></div></label>
+					<label>卡號<div id="donation-card-number" class="paypal-card-field"></div></label>
+					<label>有效期限<div id="donation-card-expiry" class="paypal-card-field"></div></label>
+					<label>安全碼<div id="donation-card-cvv" class="paypal-card-field"></div></label>
+				</div>
+				<button id="paypal-card-submit" class="btn btn-primary btn-block" type="button" disabled>使用信用卡／簽帳卡贊助</button>
+				<p id="paypal-message" aria-live="polite"></p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="section">
+	<div class="container" style="max-width:720px">
+		<div class="section-head">
+			<h2>未來預計方案（僅供參考，尚未開放付款）</h2>
+			<p>訓練完成、正式上線後才會開始收費，現在還不會被扣款。</p>
+		</div>
+		<div class="pricing-grid">
+			<div class="price-card">
+				<h3>基本方案</h3>
+				<div class="price">US$20 <span>/ 月</span></div>
+				<ul>
+					<li>每月 300 則對話額度</li>
+					<li>中英文雙語介面</li>
+					<li>Email 客服支援</li>
+				</ul>
+			</div>
+			<div class="price-card">
+				<h3>進階方案</h3>
+				<div class="price">US$100 <span>/ 月</span></div>
+				<ul>
+					<li>更高對話額度</li>
+					<li>更進階的模型與功能</li>
+					<li>優先客服支援</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="section">
+	<div class="container" style="max-width:720px">
+		<div class="section-head">
+			<h2>常見問題</h2>
+		</div>
+		<div class="faq-item">
+			<h3>現在用 AI 聊天室要付錢嗎？</h3>
+			<p>不用，訓練期間完全免費，登入後就能直接使用。</p>
+		</div>
+		<div class="faq-item">
+			<h3>贊助是訂閱嗎，會不會自動扣款？</h3>
+			<p>不會，贊助是透過 PayPal 處理的單次付款，不會有後續自動扣款。</p>
+		</div>
+		<div class="faq-item">
+			<h3>之後開始收費，我會被自動扣款嗎？</h3>
+			<p>不會，正式收費上線時會另外公告，並由你自己選擇是否訂閱付費方案，不會自動幫你扣款。</p>
+		</div>
+	</div>
+</section>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-links">
+			<a href="index.html">首頁</a>
+			<a href="chat.html">AI 聊天室</a>
+			<a href="#terms">服務條款</a>
+			<a href="#privacy">隱私權政策</a>
+			<a href="#refund">退款政策</a>
+			<a href="../index.html">EPOCH SHOP 主站</a>
+		</div>
+		<div>© 2026 Epoch AI · epoch-shop.com</div>
+	</div>
+</footer>
+
+<script src="assets/js/matrix.js"></script>
+<script src="assets/js/clerk-config.js?v=5"></script>
+<script src="assets/js/api-config.js?v=4"></script>
+<script src="assets/js/auth.js?v=4"></script>
+<script src="assets/js/paypal-donate.js?v=2"></script>
+</body>
+</html>

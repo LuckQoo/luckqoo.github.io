@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>會員中心 — Epoch AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/site.css?v=2">
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<div class="bg-mask"></div>
+
+<nav class="site-nav">
+	<div class="container">
+		<a class="site-logo" href="index.html">EPOCH AI</a>
+		<ul class="nav-links">
+				<li><a href="../index.html">首頁</a></li>
+			<li><a href="index.html#features">功能特色</a></li>
+			<li><a href="pricing.html">贊助</a></li>
+			<li><a href="chat.html">AI 聊天室</a></li>
+			<li><a class="active" href="account.html">會員中心</a></li>
+		</ul>
+		<div class="nav-cta" id="clerk-auth-slot">
+			<a class="btn btn-ghost" href="#login">登入</a>
+			<a class="btn btn-primary" href="chat.html">立即註冊</a>
+		</div>
+	</div>
+</nav>
+
+<div class="chat-page-wrap">
+	<div class="container" style="max-width:640px">
+
+		<div id="account-locked" class="epoch-ai-chat-locked" style="display:none">
+			<p lang="zh-TW">請先註冊或登入帳號才能查看會員中心。</p>
+			<p lang="en"><em>Please register or log in to view your account.</em></p>
+			<p><a class="epoch-ai-chat-cta" href="#" id="account-locked-cta">前往註冊 / 登入 / Register or log in</a></p>
+		</div>
+
+		<div id="account-signed-in-area" style="display:none">
+
+			<section class="section" style="border-top:none;padding-top:0">
+				<div class="section-head" style="text-align:left">
+					<h2>我的帳號</h2>
+				</div>
+				<div class="card">
+					<p><strong>Email：</strong><span id="account-email">—</span></p>
+					<p><strong>方案狀態：</strong><span id="account-plan-status">訓練期間，免費使用中</span></p>
+				</div>
+			</section>
+
+			<section class="section">
+				<div class="section-head" style="text-align:left">
+					<h2>今日使用量</h2>
+					<p>訓練期間每人每日有免費對話則數上限，隔天會自動重置。</p>
+				</div>
+				<div class="card">
+					<p id="account-usage-text">載入中…</p>
+					<div style="background:rgba(255,255,255,0.08);border-radius:999px;height:10px;overflow:hidden;margin-top:10px">
+						<div id="account-usage-bar" style="background:var(--accent, #2cff7c);height:100%;width:0%"></div>
+					</div>
+				</div>
+			</section>
+
+			<section class="section">
+				<div class="section-head" style="text-align:left">
+					<h2>EPOCH SHOP</h2>
+					<p>AI Chat 是 EPOCH SHOP 底下的服務，與主站共用 epoch-shop.com 網域。</p>
+				</div>
+				<a class="btn btn-ghost btn-block" href="../index.html">回到 EPOCH SHOP 主站</a>
+			</section>
+
+		</div>
+
+	</div>
+</div>
+
+<footer class="site-footer">
+	<div class="container">
+		<div class="footer-links">
+			<a href="index.html">首頁</a>
+			<a href="pricing.html">贊助</a>
+			<a href="chat.html">AI 聊天室</a>
+			<a href="../index.html">EPOCH SHOP 主站</a>
+		</div>
+		<div>© 2026 Epoch AI · epoch-shop.com</div>
+	</div>
+</footer>
+
+<script src="assets/js/matrix.js"></script>
+<script src="assets/js/clerk-config.js?v=5"></script>
+<script src="assets/js/api-config.js?v=4"></script>
+<script src="assets/js/auth.js?v=4"></script>
+<script>
+(function () {
+	var locked = document.getElementById('account-locked');
+	var signedInArea = document.getElementById('account-signed-in-area');
+	var lockedCta = document.getElementById('account-locked-cta');
+	var emailEl = document.getElementById('account-email');
+	var usageText = document.getElementById('account-usage-text');
+	var usageBar = document.getElementById('account-usage-bar');
+
+	function apiUrl(path) {
+		var base = window.EPOCH_API_BASE_URL || '';
+		return base + path;
+	}
+
+	async function loadUsage() {
+		if (!window.Clerk || !window.Clerk.session) return;
+		try {
+			var token = await window.Clerk.session.getToken();
+			var res = await fetch(apiUrl('/api/me/usage'), {
+				headers: { 'Authorization': 'Bearer ' + token },
+			});
+			if (!res.ok) throw new Error('usage fetch failed');
+			var data = await res.json();
+			if (data.unlimited) {
+				usageText.textContent = '今天已使用 ' + data.used + ' 則對話（此帳號不受每日上限限制）';
+				usageBar.style.width = '100%';
+			} else if (data.freeDuringTraining) {
+				usageText.textContent = '今天已使用 ' + data.used + ' 則對話（每日上限依系統狀況調整）';
+				var pct = data.limit > 0 ? Math.min(100, (data.used / data.limit) * 100) : 0;
+				usageBar.style.width = pct + '%';
+			} else {
+				usageText.textContent = '目前依訂閱方案額度計算';
+			}
+		} catch (err) {
+			console.error('[epoch-ai-chat] load usage failed', err);
+			usageText.textContent = '目前無法載入使用量';
+		}
+	}
+
+	function applyAuthState(detail) {
+		if (detail.signedIn) {
+			locked.style.display = 'none';
+			signedInArea.style.display = '';
+			if (window.Clerk && window.Clerk.user) {
+				var email = window.Clerk.user.primaryEmailAddress
+					? window.Clerk.user.primaryEmailAddress.emailAddress
+					: (window.Clerk.user.fullName || '—');
+				emailEl.textContent = email;
+			}
+			loadUsage();
+		} else {
+			locked.style.display = '';
+			signedInArea.style.display = 'none';
+		}
+	}
+
+	document.addEventListener('epoch-auth-ready', function (e) {
+		applyAuthState(e.detail);
+	});
+
+	lockedCta.addEventListener('click', function (e) {
+		e.preventDefault();
+		if (window.Clerk) {
+			window.Clerk.openSignIn({});
+		} else {
+			lockedCta.textContent = '登入功能尚未開放，請稍後再試';
+			lockedCta.style.pointerEvents = 'none';
+			lockedCta.style.opacity = '0.6';
+		}
+	});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+.epoch-ai-chat-root {
+	max-width: 720px;
+	margin: 0 auto;
+}
+
+.epoch-ai-chat {
+	display: flex;
+	flex-direction: column;
+	height: 78vh;
+	min-height: 560px;
+	background: rgba(10, 40, 20, 0.92);
+	border: 1px solid rgba(44, 255, 124, 0.25);
+	border-radius: 16px;
+	overflow: hidden;
+	box-shadow: 0 15px 30px rgba(0, 0, 0, 0.35);
+	font-family: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.epoch-ai-chat-toolbar {
+	display: flex;
+	justify-content: flex-end;
+	padding: 8px 12px;
+	border-bottom: 1px solid rgba(44, 255, 124, 0.25);
+	background: rgba(4, 12, 8, 0.88);
+}
+
+.epoch-ai-chat-lang-toggle {
+	background: rgba(8, 22, 13, 0.8);
+	border: 1px solid rgba(44, 255, 124, 0.32);
+	color: #7dffb1;
+	border-radius: 999px;
+	padding: 4px 12px;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.epoch-ai-chat-lang-toggle:hover {
+	color: #072511;
+	background: linear-gradient(90deg, #2cff7c, #67ff9f);
+	border-color: transparent;
+}
+
+.epoch-ai-chat-messages {
+	flex: 1;
+	overflow-y: auto;
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.epoch-ai-chat-msg {
+	display: flex;
+}
+
+.epoch-ai-chat-msg--user {
+	justify-content: flex-end;
+}
+
+.epoch-ai-chat-msg--assistant {
+	justify-content: flex-start;
+}
+
+.epoch-ai-chat-bubble {
+	max-width: 80%;
+	padding: 10px 14px;
+	border-radius: 14px;
+	line-height: 1.5;
+	white-space: pre-wrap;
+	word-break: break-word;
+	font-size: 14px;
+}
+
+.epoch-ai-chat-msg--user .epoch-ai-chat-bubble {
+	background: rgba(44, 255, 124, 0.22);
+	color: #eafff2;
+	border: 1px solid rgba(44, 255, 124, 0.35);
+	border-bottom-right-radius: 4px;
+}
+
+.epoch-ai-chat-msg--assistant .epoch-ai-chat-bubble {
+	background: rgba(130, 255, 181, 0.12);
+	color: #d8ffe5;
+	border: 1px solid rgba(44, 255, 124, 0.15);
+	border-bottom-left-radius: 4px;
+}
+
+.epoch-ai-chat-msg--thinking .epoch-ai-chat-bubble {
+	color: #8dd9a5;
+	font-style: italic;
+}
+
+.epoch-ai-chat-form {
+	display: flex;
+	gap: 8px;
+	padding: 12px;
+	border-top: 1px solid rgba(44, 255, 124, 0.25);
+	background: rgba(4, 12, 8, 0.88);
+}
+
+.epoch-ai-chat-input {
+	flex: 1;
+	resize: none;
+	border-radius: 10px;
+	border: 1px solid rgba(44, 255, 124, 0.35);
+	background: rgba(6, 15, 9, 0.88);
+	color: #d8ffe5;
+	padding: 10px 12px;
+	font-size: 14px;
+	max-height: 120px;
+	font-family: inherit;
+}
+
+.epoch-ai-chat-input:focus {
+	outline: none;
+	border-color: #2cff7c;
+}
+
+.epoch-ai-chat-send {
+	background: linear-gradient(90deg, #21d46a, #74ffab);
+	color: #04260f;
+	border: none;
+	border-radius: 10px;
+	padding: 0 18px;
+	font-size: 14px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.epoch-ai-chat-send:disabled {
+	opacity: 0.6;
+	cursor: default;
+}
+
+.epoch-ai-chat-send:hover:not(:disabled) {
+	filter: brightness(1.08);
+}
+
+.epoch-ai-chat-locked {
+	max-width: 560px;
+	margin: 40px auto;
+	padding: 24px;
+	text-align: center;
+	background: rgba(10, 40, 20, 0.92);
+	border: 1px solid rgba(44, 255, 124, 0.25);
+	border-radius: 16px;
+	color: #d8ffe5;
+	font-family: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.epoch-ai-chat-cta {
+	display: inline-block;
+	margin-top: 8px;
+	background: linear-gradient(90deg, #21d46a, #74ffab);
+	color: #04260f;
+	text-decoration: none;
+	padding: 10px 20px;
+	border-radius: 10px;
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.epoch-ai-chat-cta:hover {
+	filter: brightness(1.08);
+}
