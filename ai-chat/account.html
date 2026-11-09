@@ -90,9 +90,9 @@
 </footer>
 
 <script src="assets/js/matrix.js"></script>
-<script src="assets/js/clerk-config.js?v=5"></script>
+<script src="assets/js/clerk-config.js?v=6"></script>
 <script src="assets/js/api-config.js?v=4"></script>
-<script src="assets/js/auth.js?v=4"></script>
+<script src="assets/js/auth.js?v=6"></script>
 <script>
 (function () {
 	var locked = document.getElementById('account-locked');
@@ -133,6 +133,11 @@
 	}
 
 	function applyAuthState(detail) {
+		if (detail.error || detail.unconfigured) {
+			var cta = document.getElementById('account-locked-cta');
+			cta.textContent = '登入服務暫時無法使用，請稍後再試';
+			cta.removeAttribute('href');
+		}
 		if (detail.signedIn) {
 			locked.style.display = 'none';
 			signedInArea.style.display = '';

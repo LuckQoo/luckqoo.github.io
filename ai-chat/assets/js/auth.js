@@ -5,17 +5,13 @@
 //   - 對外廣播 "epoch-auth-ready" 事件（detail: { signedIn, unconfigured, error }），
 //     讓 chat.html 用來決定要不要顯示「請先登入」的鎖定畫面。
 (function () {
-	// 走 /__clerk 反向代理（server/index.js 裡的 /__clerk/* 路由），不直接連
-	// clerk.epoch-shop.com，避開那個網域在 Cloudflare 上卡住的 DNS 驗證問題。
-	// 規格見 https://clerk.com/docs/advanced-usage/using-proxies
 	function loadClerkScript(cfg) {
 		return new Promise(function (resolve, reject) {
 			var script = document.createElement("script");
 			script.async = true;
 			script.crossOrigin = "anonymous";
 			script.setAttribute("data-clerk-publishable-key", cfg.publishableKey);
-			script.setAttribute("data-clerk-proxy-url", cfg.proxyUrl);
-			script.src = cfg.proxyUrl + "/npm/@clerk/clerk-js@5/dist/clerk.browser.js";
+			script.src = cfg.frontendApi + "/npm/@clerk/clerk-js@5/dist/clerk.browser.js";
 			script.addEventListener("load", resolve);
 			script.addEventListener("error", reject);
 			document.head.appendChild(script);
@@ -24,6 +20,13 @@
 
 	function broadcast(detail) {
 		document.dispatchEvent(new CustomEvent("epoch-auth-ready", { detail: detail }));
+	}
+
+	function renderUnavailable() {
+		var slot = document.getElementById("clerk-auth-slot");
+		if (!slot) return;
+		slot.textContent = "會員登入暫時無法使用，請稍後再試。";
+		slot.setAttribute("role", "status");
 	}
 
 	function renderNavSlot() {
@@ -60,10 +63,11 @@
 
 	async function init() {
 		var cfg = window.EPOCH_CLERK_CONFIG;
-		var unconfigured = !cfg || !cfg.publishableKey || cfg.publishableKey.indexOf("REPLACE_ME") !== -1;
+		var unconfigured = !cfg || !cfg.frontendApi || !cfg.publishableKey || cfg.publishableKey.indexOf("REPLACE_ME") !== -1;
 
 		if (unconfigured) {
 			console.warn("[epoch-auth] 尚未設定 Clerk Publishable Key，登入功能無法使用。請編輯 assets/js/clerk-config.js");
+			renderUnavailable();
 			broadcast({ signedIn: false, unconfigured: true });
 			return;
 		}
@@ -73,6 +77,7 @@
 			await window.Clerk.load();
 		} catch (err) {
 			console.error("[epoch-auth] Clerk 載入失敗", err);
+			renderUnavailable();
 			broadcast({ signedIn: false, error: true });
 			return;
 		}
