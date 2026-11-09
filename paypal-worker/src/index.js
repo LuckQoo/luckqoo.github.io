@@ -248,7 +248,7 @@ export default { async fetch(request, env) {
   const path = new URL(request.url).pathname;
   try {
     if (request.method === "GET" && path === "/api/codapay/transaction-notification") return await handleCodapayNotification(request, env);
-    if (request.method === "POST" && path === "/api/codapay/payments") { if (!(await allowedByRateLimit(request, env))) return json(request, { error: "rate_limit_exceeded" }, 429); return await createCodapayPayment(request, env); }
+    if (request.method === "POST" && path === "/api/codapay/payments") { if (env.CODAPAY_CHECKOUT_ENABLED !== "true") return json(request, { error: "checkout_paused" }, 503); if (!(await allowedByRateLimit(request, env))) return json(request, { error: "rate_limit_exceeded" }, 429); return await createCodapayPayment(request, env); }
     if (request.method === "POST" && path === "/api/codapay/payment-status") return await getCodapayStatus(request, env);
     if (request.method === "POST" && path === "/api/paypal/webhook") return handleWebhook(request, env);
     if (request.method === "GET" && path === "/healthz") { await env.DB.prepare("SELECT 1").first(); return json(request, { ok: true, database: true, webhookConfigured: Boolean(env.PAYPAL_WEBHOOK_ID) }); }

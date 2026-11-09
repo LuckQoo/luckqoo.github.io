@@ -1,6 +1,7 @@
 (function () {
   "use strict";
   const API_BASE = "https://pay.epoch-shop.com";
+  const CHECKOUT_PAUSED = true;
   const consent = document.getElementById("policy-consent");
   const email = document.getElementById("customer-email");
   const summary = document.getElementById("checkout-cart-summary");
@@ -9,6 +10,7 @@
   const message = document.getElementById("payment-message");
   if (!window.cartApi || !consent || !email || !summary || !form || !submit || !message) return;
 
+  if (CHECKOUT_PAUSED) message.textContent = "線上結帳暫停中，請稍後再試或聯絡我們。";
   const cart = window.cartApi.getCart();
   if (!cart.length) {
     summary.textContent = "購物車目前是空的，請先選購商品。";
@@ -28,6 +30,7 @@
   total.className = "price";
   total.textContent = `總計：US$${window.cartApi.cartTotal()}`;
   summary.appendChild(total);
+  if (CHECKOUT_PAUSED) return;
   if (cart.some((item) => item.recurring || item.id === "hosting-e" || item.id === "hosting-n")) {
     message.textContent = "主機月租目前無法線上結帳，請聯絡客服安排。其他商品請分開結帳。";
     return;

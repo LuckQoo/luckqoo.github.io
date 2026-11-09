@@ -9,7 +9,7 @@ function setup() {
   let saved;
   let upstream;
   const env = {
-    CODAPAY_API_KEY: secret, CODAPAY_ENV: "production", CODAPAY_PROJECT_ID: "3912",
+    CODAPAY_API_KEY: secret, CODAPAY_ENV: "production", CODAPAY_PROJECT_ID: "3912", CODAPAY_CHECKOUT_ENABLED: "true",
     DB: { prepare(sql) { return { bind(...v) { return {
       async first() {
         if (sql.startsWith("SELECT request_count")) return { request_count: 1 };
@@ -34,6 +34,14 @@ async function status(ctx) {
     method: "POST", body: JSON.stringify({ txnId: transactionId, orderId: ctx.saved.orderId })
   }), ctx.env);
 }
+test("new Codapay checkouts are paused unless explicitly enabled", async () => {
+  const ctx = setup();
+  delete ctx.env.CODAPAY_CHECKOUT_ENABLED;
+  const response = await create(ctx);
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error, "checkout_paused");
+  assert.equal(ctx.saved, undefined);
+});
 test("Codapay creates a server-priced order with the current return URL and persists items", async () => {
   const ctx = setup(), original = globalThis.fetch;
   globalThis.fetch = async (_url, options) => {
@@ -58,6 +66,7 @@ test("Codapay confirms the saved order, amount and currency before marking succe
     : Response.json({ paymentResult: result });
   try {
     await create(ctx);
+    delete ctx.env.CODAPAY_CHECKOUT_ENABLED;
     result = { resultCode: 481 };
     assert.equal((await (await status(ctx)).json()).status, "pending");
     result = { resultCode: 0, txnId: transactionId, orderId: ctx.saved.orderId, originAmount: 20, originCurrency: "USD" };
@@ -77,6 +86,7 @@ test("Codapay rejects forged notifications and checks the provider before acknow
     : Response.json({ paymentResult: { resultCode: 0, txnId: transactionId, orderId: ctx.saved.orderId, originAmount: 20, originCurrency: "USD" } });
   try {
     await create(ctx);
+    delete ctx.env.CODAPAY_CHECKOUT_ENABLED;
     const params = new URLSearchParams({ TxnId: transactionId, OrderId: ctx.saved.orderId, ResultCode: "0", Checksum: "0".repeat(32) });
     let response = await worker.fetch(new Request(`https://pay.example/api/codapay/transaction-notification?${params}`), ctx.env);
     assert.equal(response.status, 401);
