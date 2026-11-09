@@ -234,6 +234,7 @@
 
 		input.value = '';
 		sendBtn.disabled = true;
+		sendBtn.textContent = '阿容思考中，可能需要一分鐘…';
 		appendMessage('user', text);
 
 		try {
@@ -272,6 +273,7 @@
 			appendMessage('assistant', '無法連線至 AI 服務，請稍後再試。');
 		} finally {
 			sendBtn.disabled = false;
+			sendBtn.textContent = '送出';
 		}
 	});
 })();
