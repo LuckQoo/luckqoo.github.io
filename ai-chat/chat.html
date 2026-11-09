@@ -73,7 +73,7 @@
 			</div>
 			<div class="epoch-ai-chat">
 				<div class="epoch-ai-chat-toolbar">
-					<button type="button" class="epoch-ai-chat-lang-toggle" id="chat-search-toggle" title="開啟後，回覆前會先搜尋 EPOCH 官網（epoch-shop.com）的內容">🔍 搜尋本站：關</button>
+					<button type="button" class="epoch-ai-chat-lang-toggle" id="chat-search-toggle" title="本站搜尋功能暫停中" disabled>🔍 本站搜尋暫停中</button>
 				<button type="button" class="epoch-ai-chat-lang-toggle">EN</button>
 				</div>
 				<div class="epoch-ai-chat-messages" id="chat-messages">
@@ -252,7 +252,10 @@
 				return;
 			}
 			if (res.status === 429) {
-				appendMessage('assistant', '今天的免費對話額度已經用完了，明天會自動重置，感謝你的耐心！');
+				var limitInfo = await res.json().catch(function () { return {}; });
+				appendMessage('assistant', limitInfo.error === 'service_daily_limit_exceeded'
+					? '目前服務已達今日對話上限，請稍後再試。'
+					: '今天的免費對話額度已經用完了，明天會自動重置，感謝你的耐心！');
 				return;
 			}
 			if (!res.ok) {
