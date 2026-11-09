@@ -7,7 +7,7 @@ const PRODUCTS = {
   "model-edit-ultra": { name: "修改模型 - 極致", amount: 5000 }, "hosting-e": { name: "E 系列主機使用權", amount: 30000 },
   "hosting-n": { name: "N 系列主機使用權", amount: 60000 }
 };
-const ALLOWED_ORIGINS = new Set(["https://epoch-shop.shop", "https://www.epoch-shop.shop", "https://epoch-shop.com", "https://www.epoch-shop.com"]);
+const ALLOWED_ORIGINS = new Set(["https://epoch-shop.com", "https://www.epoch-shop.com"]);
 const EVENT_STATUS = new Map([
   ["PAYMENT.CAPTURE.COMPLETED", "COMPLETED"], ["PAYMENT.CAPTURE.PENDING", "PENDING"],
   ["PAYMENT.CAPTURE.DECLINED", "DENIED"], ["PAYMENT.CAPTURE.DENIED", "DENIED"],
@@ -61,11 +61,11 @@ export function isValidOrderId(value) { return /^[A-Z0-9]{10,30}$/.test(value ||
 const CODAPAY_BASE_URL = "https://airtime.codapayments.com/airtime/api/restful/v2.0/Payment";
 const CODAPAY_COUNTRY_TAIWAN = 158;
 const CODAPAY_CURRENCY_USD = 840;
-const CODAPAY_RETURN_URL = "https://epoch-shop.shop/menu/codapay-complete.html?txn_id={transactionId}&order_id={orderId}";
+const CODAPAY_RETURN_URL = "https://epoch-shop.com/menu/codapay-complete.html?txn_id={transactionId}&order_id={orderId}";
 
 function isEmail(value) { return typeof value === "string" && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value); }
 function parseCodapay(raw) { return JSON.parse(raw.replace(/("txnId"\s*:\s*)(\d{16,})/g, '$1"$2"')); }
-function codapayStatus(resultCode) { return resultCode === 0 ? "success" : resultCode === 431 || resultCode === 216 ? "pending" : "failed"; }
+function codapayStatus(resultCode) { return resultCode === 0 ? "success" : [216, 431, 481].includes(resultCode) ? "pending" : "failed"; }
 
 async function codapayRequest(env, endpoint, payload) {
   if (env.CODAPAY_ENV !== "production" || !env.CODAPAY_API_KEY || !env.CODAPAY_PROJECT_ID) throw new Error("codapay_not_configured");
@@ -83,11 +83,11 @@ async function codapayRequest(env, endpoint, payload) {
 
 async function createCodapayPayment(request, env) {
   const body = await request.json().catch(() => ({}));
-  const purchase = buildShopPurchase(body.items);
-  if (purchase.error) return json(request, purchase, 400);
-  if (body.items.some((entry) => entry?.id === "hosting-e" || entry?.id === "hosting-n")) {
+  if (Array.isArray(body.items) && body.items.some((entry) => entry?.id === "hosting-e" || entry?.id === "hosting-n")) {
     return json(request, { error: "recurring_not_supported", details: "Codapay 目前不支援此訂閱方案，請聯絡客服。" }, 400);
   }
+  const purchase = buildShopPurchase(body.items);
+  if (purchase.error) return json(request, purchase, 400);
   const email = String(body.email || "").trim().toLowerCase();
   if (!isEmail(email)) return json(request, { error: "invalid_email" }, 400);
 
@@ -125,17 +125,22 @@ async function createCodapayPayment(request, env) {
   }
   const now = new Date().toISOString();
   await env.DB.prepare("INSERT INTO codapay_orders (txn_id,order_id,customer_email,amount_cents,currency,status,raw_json,created_at,updated_at) VALUES (?,?,?,?,?,'initiated',?,?,?)")
-    .bind(txnId, orderId, email, purchase.cents, "USD", JSON.stringify(data), now, now).run();
+    .bind(txnId, orderId, email, purchase.cents, "USD", JSON.stringify({ init: data, items: purchase.items }), now, now).run();
   return json(request, { txnId, orderId, redirectUrl: redirect.toString(), environment: "production" });
 }
 
-async function inquireCodapay(env, txnId) {
+async function inquireCodapay(env, txnId, saved) {
   const data = await codapayRequest(env, "inquiryPaymentResult.json", {
     inquiryPaymentRequest: { apiKey: env.CODAPAY_API_KEY, country: CODAPAY_COUNTRY_TAIWAN, projectId: String(env.CODAPAY_PROJECT_ID), txnId, needStatusFinal: "true" }
   });
   const result = data?.paymentResult;
-  const resultCode = Number(result?.resultCode);
-  if (!Number.isFinite(resultCode)) throw new Error("codapay_status_unavailable");
+  const rawCode = result?.resultCode;
+  if (rawCode === null || rawCode === undefined || rawCode === "") throw new Error("codapay_status_unavailable");
+  const resultCode = Number(rawCode);
+  if (!Number.isInteger(resultCode)) throw new Error("codapay_status_unavailable");
+  if (resultCode === 0 && (String(result.txnId) !== txnId || result.orderId !== saved.order_id || result.originCurrency !== saved.currency || !Number.isFinite(Number(result.originAmount)) || Math.round(Number(result.originAmount) * 100) !== saved.amount_cents)) {
+    throw new Error("codapay_order_mismatch");
+  }
   return { data, result, resultCode, status: codapayStatus(resultCode) };
 }
 
@@ -144,10 +149,10 @@ async function getCodapayStatus(request, env) {
   const txnId = String(body.txnId || "");
   const orderId = String(body.orderId || "");
   if (!/^\d{16,25}$/.test(txnId) || !/^epoch-[a-zA-Z0-9-]{8,50}$/.test(orderId)) return json(request, { error: "invalid_transaction" }, 400);
-  const saved = await env.DB.prepare("SELECT order_id FROM codapay_orders WHERE txn_id=?").bind(txnId).first();
+  const saved = await env.DB.prepare("SELECT order_id,amount_cents,currency FROM codapay_orders WHERE txn_id=?").bind(txnId).first();
   if (!saved || saved.order_id !== orderId) return json(request, { error: "unknown_transaction" }, 404);
-  const inquiry = await inquireCodapay(env, txnId);
-  await env.DB.prepare("UPDATE codapay_orders SET status=?,result_code=?,raw_json=?,updated_at=? WHERE txn_id=?")
+  const inquiry = await inquireCodapay(env, txnId, saved);
+  await env.DB.prepare("UPDATE codapay_orders SET status=?,result_code=?,raw_json=json_set(raw_json,'$.inquiry',json(?)),updated_at=? WHERE txn_id=?")
     .bind(inquiry.status, inquiry.resultCode, JSON.stringify(inquiry.data), new Date().toISOString(), txnId).run();
   return json(request, { txnId, orderId, status: inquiry.status, resultCode: inquiry.resultCode, resultDesc: inquiry.result?.resultDesc || "" });
 }
@@ -160,10 +165,10 @@ async function handleCodapayNotification(request, env) {
   const checksum = url.searchParams.get("Checksum") || "";
   const expected = md5(`${txnId}${env.CODAPAY_API_KEY || ""}${orderId}${resultCode}`);
   if (!/^[a-f\d]{32}$/i.test(checksum) || checksum.toLowerCase() !== expected.toLowerCase()) return new Response("ResultCode=401", { status: 401 });
-  const saved = await env.DB.prepare("SELECT order_id FROM codapay_orders WHERE txn_id=?").bind(txnId).first();
+  const saved = await env.DB.prepare("SELECT order_id,amount_cents,currency FROM codapay_orders WHERE txn_id=?").bind(txnId).first();
   if (!saved || saved.order_id !== orderId) return new Response("ResultCode=404", { status: 404 });
-  const inquiry = await inquireCodapay(env, txnId);
-  await env.DB.prepare("UPDATE codapay_orders SET status=?,result_code=?,raw_json=?,updated_at=? WHERE txn_id=?")
+  const inquiry = await inquireCodapay(env, txnId, saved);
+  await env.DB.prepare("UPDATE codapay_orders SET status=?,result_code=?,raw_json=json_set(raw_json,'$.inquiry',json(?)),updated_at=? WHERE txn_id=?")
     .bind(inquiry.status, inquiry.resultCode, JSON.stringify(inquiry.data), new Date().toISOString(), txnId).run();
   return new Response("ResultCode=0", { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } });
 }
@@ -242,9 +247,9 @@ export default { async fetch(request, env) {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: responseHeaders(request) });
   const path = new URL(request.url).pathname;
   try {
-    if (request.method === "GET" && path === "/api/codapay/transaction-notification") return handleCodapayNotification(request, env);
-    if (request.method === "POST" && path === "/api/codapay/payments") { if (!(await allowedByRateLimit(request, env))) return json(request, { error: "rate_limit_exceeded" }, 429); return createCodapayPayment(request, env); }
-    if (request.method === "POST" && path === "/api/codapay/payment-status") return getCodapayStatus(request, env);
+    if (request.method === "GET" && path === "/api/codapay/transaction-notification") return await handleCodapayNotification(request, env);
+    if (request.method === "POST" && path === "/api/codapay/payments") { if (!(await allowedByRateLimit(request, env))) return json(request, { error: "rate_limit_exceeded" }, 429); return await createCodapayPayment(request, env); }
+    if (request.method === "POST" && path === "/api/codapay/payment-status") return await getCodapayStatus(request, env);
     if (request.method === "POST" && path === "/api/paypal/webhook") return handleWebhook(request, env);
     if (request.method === "GET" && path === "/healthz") { await env.DB.prepare("SELECT 1").first(); return json(request, { ok: true, database: true, webhookConfigured: Boolean(env.PAYPAL_WEBHOOK_ID) }); }
     if (request.method === "GET" && path === "/api/config") return json(request, { paypalClientId: env.PAYPAL_CLIENT_ID, paypalCurrency: "USD", paypalEnvironment: env.PAYPAL_ENV || "sandbox" });

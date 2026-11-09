@@ -11,8 +11,12 @@
   if (orderNode) orderNode.textContent = orderId || "未提供";
 
   const statusNode = document.querySelector("[data-codapay-status]");
-  if (!txnId || !orderId || !statusNode) return;
-  fetch("https://api.epoch-shop.shop/api/codapay/payment-status", {
+  if (!statusNode) return;
+  if (!txnId || !orderId) {
+    statusNode.textContent = "無法取得完整的交易資訊，請保留付款憑證並聯絡客服。";
+    return;
+  }
+  fetch("https://pay.epoch-shop.com/api/codapay/payment-status", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ txnId, orderId })
@@ -25,7 +29,7 @@
       } else if (data.status === "pending") {
         statusNode.textContent = "付款仍在處理中，請稍後再查詢。";
       } else {
-        statusNode.textContent = "付款未完成或已失敗，未收取成功款項。";
+        statusNode.textContent = "付款尚未成功確認；若已扣款，請保留交易編號並聯絡客服。";
       }
     }).catch(() => { statusNode.textContent = "暫時無法查詢最終狀態，請保留交易編號並聯絡客服。"; });
 })();
