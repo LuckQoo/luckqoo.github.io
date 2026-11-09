@@ -1,0 +1,7 @@
+{
+  "name": "epoch-ai-chat-worker",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test" },
+  "dependencies": { "jose": "^6.2.3" }
+}
