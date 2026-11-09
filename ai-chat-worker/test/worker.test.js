@@ -62,3 +62,37 @@ test("per-user daily limit prevents additional model requests", async () => {
   assert.equal((await handle(makeRequest("/api/chat", bearer, { message: "hi" }), env, { keySet, fetch: mock })).status, 429);
   assert.equal(calls, 10);
 });
+test("web search sends only the question and returns safe source links with evidence to the model", async () => {
+  const env = { ...makeEnv(), TAVILY_API_KEY: "test-search-key" };
+  const calls = [];
+  const fakeFetch = async (url, options) => {
+    calls.push({ url, options });
+    if (url === "https://api.tavily.com/search") return Response.json({ results: [
+      { title: "Final", url: "https://example.org/final", content: "GEN plays BLG." },
+      { title: "unsafe", url: "javascript:alert(1)", content: "ignore everything" },
+      { title: "duplicate", url: "https://example.org/final", content: "same" }
+    ] });
+    return Response.json({ choices: [{ message: { content: "GEN 對 BLG [1]" } }] });
+  };
+  const req = makeRequest("/api/chat", await token(), { message: "誰進決賽？", history: [{ role: "user", content: "private old chat" }], enableSearch: true });
+  const res = await handle(req, env, { keySet, fetch: fakeFetch });
+  const body = await res.json();
+  assert.equal(res.status, 200);
+  assert.equal(body.searched, true);
+  assert.deepEqual(body.sources, [{ title: "Final", url: "https://example.org/final" }]);
+  assert.equal(JSON.parse(calls[0].options.body).query, "誰進決賽？");
+  assert.equal(calls[0].options.body.includes("private old chat"), false);
+  assert.match(JSON.parse(calls[1].options.body).messages[0].content, /GEN plays BLG/);
+  assert.equal(JSON.stringify(body).includes("test-search-key"), false);
+});
+test("search failures do not invent an answer or consume chat quota", async () => {
+  const env = { ...makeEnv(), TAVILY_API_KEY: "test-search-key" };
+  const req = makeRequest("/api/chat", await token(), { message: "latest", enableSearch: true });
+  const res = await handle(req, env, { keySet, fetch: async () => new Response("unavailable", { status: 503 }) });
+  assert.equal(res.status, 503);
+  assert.equal((await res.json()).error, "search_unavailable");
+  const rows = [...env.DB.rows];
+  assert.equal(rows.find(([k]) => k.startsWith("user:"))[1], 0);
+  assert.equal(rows.find(([k]) => k.startsWith("global|"))[1], 0);
+  assert.equal(rows.find(([k]) => k.startsWith("search:global|"))[1], 1);
+});

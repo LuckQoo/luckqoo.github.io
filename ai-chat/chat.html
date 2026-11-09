@@ -73,9 +73,10 @@
 			</div>
 			<div class="epoch-ai-chat">
 				<div class="epoch-ai-chat-toolbar">
-					<button type="button" class="epoch-ai-chat-lang-toggle" id="chat-search-toggle" title="本站搜尋功能暫停中" disabled>🔍 本站搜尋暫停中</button>
+					<button type="button" class="epoch-ai-chat-lang-toggle active" id="chat-search-toggle" title="開啟時將本次問題傳送給 Tavily 搜尋，請勿輸入敏感資料" aria-pressed="true">🔍 網路搜尋：開</button>
 				<button type="button" class="epoch-ai-chat-lang-toggle">EN</button>
 				</div>
+				<p style="font-size:0.8em; opacity:0.8; margin:0.25em 0.75em">開啟網路搜尋時，本次問題會傳送至 Tavily；請勿輸入密碼或其他敏感資料。搜尋結果和 AI 回答可能有誤，請查閱來源。</p>
 				<div class="epoch-ai-chat-messages" id="chat-messages">
 					<div class="epoch-ai-chat-msg epoch-ai-chat-msg--assistant">
 						<div class="epoch-ai-chat-bubble">你好，我是 EPOCH AI，我叫阿容。有什麼我可以幫忙的嗎？</div>
@@ -177,12 +178,13 @@
 	var messages = document.getElementById('chat-messages');
 	var searchToggle = document.getElementById('chat-search-toggle');
 	var history = [];
-	var searchEnabled = false;
+	var searchEnabled = true;
 
 	searchToggle.addEventListener('click', function () {
 		searchEnabled = !searchEnabled;
-		searchToggle.textContent = searchEnabled ? '🔍 搜尋本站：開' : '🔍 搜尋本站：關';
+		searchToggle.textContent = searchEnabled ? '🔍 網路搜尋：開' : '🔍 網路搜尋：關';
 		searchToggle.classList.toggle('active', searchEnabled);
+		searchToggle.setAttribute('aria-pressed', String(searchEnabled));
 	});
 
 	function apiUrl(path) {
@@ -202,13 +204,34 @@
 		}
 	});
 
-	function appendMessage(role, text, withUpgradeLink) {
+	function appendMessage(role, text, withUpgradeLink, sources) {
 		var wrapper = document.createElement('div');
 		wrapper.className = 'epoch-ai-chat-msg epoch-ai-chat-msg--' + role;
 		var bubble = document.createElement('div');
 		bubble.className = 'epoch-ai-chat-bubble';
 		bubble.textContent = text;
 		wrapper.appendChild(bubble);
+		if (Array.isArray(sources) && sources.length) {
+			var sourceList = document.createElement('div');
+			sourceList.style.marginTop = '0.6em';
+			var heading = document.createElement('div');
+			heading.textContent = '搜尋資料來源（請查閱原文確認）：';
+			sourceList.appendChild(heading);
+			sources.slice(0, 4).forEach(function (source, i) {
+				try {
+					var url = new URL(source.url);
+					if (url.protocol !== 'https:' && url.protocol !== 'http:') return;
+					var link = document.createElement('a');
+					link.href = url.href;
+					link.target = '_blank';
+					link.rel = 'noopener noreferrer';
+					link.textContent = '[' + (i + 1) + '] ' + String(source.title || url.hostname);
+					link.style.display = 'block';
+					sourceList.appendChild(link);
+				} catch (_) { /* Ignore invalid search result URLs. */ }
+			});
+			bubble.appendChild(sourceList);
+		}
 		messages.appendChild(wrapper);
 
 		if (withUpgradeLink) {
@@ -256,18 +279,23 @@
 				var limitInfo = await res.json().catch(function () { return {}; });
 				appendMessage('assistant', limitInfo.error === 'service_daily_limit_exceeded'
 					? '目前服務已達今日對話上限，請稍後再試。'
+					: limitInfo.error === 'search_daily_limit_exceeded'
+					? '今天的網路搜尋額度已用完；可關閉網路搜尋繼續聊天，或明天再試。'
 					: '今天的免費對話額度已經用完了，明天會自動重置，感謝你的耐心！');
 				return;
 			}
 			if (!res.ok) {
-				appendMessage('assistant', '發生錯誤，請稍後再試。');
+				var errorInfo = await res.json().catch(function () { return {}; });
+				appendMessage('assistant', errorInfo.error === 'search_unavailable' || errorInfo.error === 'search_not_configured'
+					? '目前無法取得網路搜尋結果，請稍後再試；也可關閉網路搜尋繼續一般聊天。'
+					: '發生錯誤，請稍後再試。');
 				return;
 			}
 
 			var data = await res.json();
 			history.push({ role: 'user', content: text });
 			history.push({ role: 'assistant', content: data.reply });
-			appendMessage('assistant', data.reply);
+			appendMessage('assistant', data.reply, false, data.sources);
 		} catch (err) {
 			console.error('[epoch-ai-chat] chat request failed', err);
 			appendMessage('assistant', '無法連線至 AI 服務，請稍後再試。');
