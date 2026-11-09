@@ -9,59 +9,47 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/site.css?v=2" />
+  <link rel="stylesheet" href="css/design-refresh.css?v=1" />
+  <link rel="stylesheet" href="css/reference-pages.css?v=5" />
 </head>
 <body>
   <canvas id="matrix"></canvas>
   <div class="bg-mask"></div>
 
-  <header class="site-header">
-    <nav class="nav-wrap">
-      <a class="brand-link" href="index.html">EPOCH SHOP</a>
-      <a class="menu-btn active" href="index.html">首頁</a>
-      <a class="menu-btn" href="menu/products.html">虛擬模型</a>
-      <a class="menu-btn" href="menu/software.html">軟體 / 應用</a>
-      <a class="menu-btn" href="menu/hosting.html">虛擬主機</a>
-      <a class="menu-btn" href="ai-chat/index.html">AI Chat</a>
-      <a class="menu-btn" href="menu/cart.html">購物車（<span data-cart-count>0</span>）</a>
-      <a class="menu-btn" href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">生活小品</a>
-      <a class="coffee-btn" href="https://www.buymeacoffee.com/haastyu" target="_blank" rel="noopener"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a Coffee&emoji=☕&slug=haastyu&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy me a coffee" /></a>
-      <a class="menu-btn" href="menu/contact.html">聯絡我們</a>
-    </nav>
-  </header>
+  <header class="site-header"><nav class="nav-wrap" aria-label="主要導覽">
+      <a class="brand-link" href="index.html"><span class="epoch-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><path fill="#80ffc7" d="M24 2 45 13 24 25 15 20 34 9Z"/><path fill="#14de8c" d="M3 14 14 20 14 34 24 40 35 34 45 39 24 48 3 37Z"/><path fill="#08a991" d="M24 25 45 13 45 27 24 39 14 34 35 22 35 19Z"/></svg></span><span>EPOCH SHOP</span></a>
+      <div class="nav-main"><a class="menu-btn active" href="index.html">首頁</a><a class="menu-btn" href="menu/products.html">虛擬模型</a><a class="menu-btn" href="menu/software.html">軟體 / 應用</a><a class="menu-btn" href="menu/hosting.html">虛擬主機</a><a class="menu-btn" href="ai-chat/chat.html">AI Chat</a></div>
+      <a class="menu-btn nav-cart" href="menu/cart.html"><span aria-hidden="true">🛒</span> 購物車 <span class="cart-counter" data-cart-count>0</span></a>
+      <div class="nav-secondary"><a href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">✎ 生活小品</a><a class="" href="menu/contact.html">✉ 聯絡我們</a><a class="coffee-btn" href="https://www.buymeacoffee.com/haastyu" target="_blank" rel="noopener"><span aria-hidden="true">☕</span> 贊助一杯咖啡</a></div>
+    </nav></header>
 
   <main>
-    <section class="hero">
-      <h1 class="cyber-title">EPOCH SHOP</h1>
-      <p class="subtitle">模型資源、主機部署、AI 互動與維護支援集中在同一個商務流程，讓社群建置更快更穩定。</p>
-      <div class="actions">
-        <a class="button primary" href="menu/products.html">開始選購</a>
-        <a class="button ghost" href="menu/contact.html">需求諮詢</a>
+    <section class="hero home-hero">
+      <div class="hero-copy">
+        <p class="hero-kicker">EPOCH SHOP <span></span></p>
+        <h1>打造你的<br /><em>數位世界</em></h1>
+        <p class="hero-description">虛擬遊戲模型・自訂載具與地圖・虛擬主機・軟體應用・AI Chat<br />一站整合多元數位商品與技術服務，實現你的遊戲、創作與應用想像。</p>
+        <div class="actions">
+          <a class="button primary" href="menu/products.html">探索商品 <span aria-hidden="true">→</span></a>
+          <a class="button ghost" href="ai-chat/chat.html">AI Chat <span aria-hidden="true">→</span></a>
+        </div>
       </div>
-      <div class="trend-panel">
-        <p class="subtitle">
-          趨勢重點：高效能主機 + 客製模型 + 人工智能互動 + 主機碼維修服務。<br />
-          使用流程：選虛擬模型或軟體 / 應用 -> 直接購買或聯繫客服。
-        </p>
-      </div>
+      <div class="core-visual" aria-hidden="true"><div class="core-ring core-ring-one"></div><div class="core-ring core-ring-two"></div><div class="core-orb"><span>AI</span></div><div class="core-platform"></div></div>
     </section>
 
-    <section class="grid" style="margin-top: 1rem;">
-      <article class="card">
-        <h2>網站趨勢定位</h2>
-        <p class="subtitle">針對遊戲社群與私人伺服器提供一站式商務入口，你可以一次完成模型資源採購、主機方案選擇、AI NPC 互動需求與維修服務諮詢。</p>
-      </article>
-      <article class="card">
-        <h2>網站流程</h2>
-        <p class="subtitle">先在虛擬模型頁選擇模型與維修服務，或到軟體 / 應用頁查看商品；虛擬主機方案可直接線上購買，客製內容則可透過聯絡我們提交需求。</p>
-      </article>
+    <section class="home-services" aria-label="探索我們的服務">
+      <a class="service-tile service-model" href="menu/products.html"><div><span class="tile-kicker">CREATE YOUR WORLD</span><h2>虛擬模型</h2><p>探索車輛、地圖與角色模型，打造你的專屬世界。</p><span class="tile-arrow" aria-hidden="true">↗</span></div></a>
+      <a class="service-tile service-hosting" href="menu/hosting.html"><div><span class="tile-kicker">POWER YOUR IDEAS</span><h2>虛擬主機</h2><p>穩定的主機服務，為你的社群與應用提供動力。</p><span class="tile-arrow" aria-hidden="true">↗</span></div></a>
+      <a class="service-tile service-ai" href="ai-chat/chat.html"><div><span class="tile-kicker">EXPLORE INTELLIGENCE</span><h2>AI Chat</h2><p>與 AI 助理阿容對話，探索創作與日常的可能。</p><span class="tile-arrow" aria-hidden="true">↗</span></div></a>
     </section>
+    <section class="home-bottom"><span>DESIGNED FOR YOUR NEXT IDEA</span><a href="menu/contact.html">有想法嗎？與我們聊聊 <span aria-hidden="true">↗</span></a></section>
   </main>
 
   <footer class="site-footer">© <span id="year"></span> EPOCH SHOP LLC<br />Business Address: 30 N Gould St Ste R, Sheridan, WY 82801, United States<br />Contact: <a href="mailto:yukine@diary-city.com">yukine@diary-city.com</a> · <a href="tel:+13073037141">+1 (307) 303-7141</a><div class="footer-links"><a href="menu/terms.html">服務條款</a><a href="menu/privacy.html">隱私政策</a><a href="menu/refund.html">退款政策</a><a href="menu/delivery.html">交付政策</a></div></footer>
 
   <script src="js/matrix.js"></script>
   <script src="js/site.js"></script>
-  <script src="js/cart.js"></script>
+  <script src="js/cart.js?v=2"></script>
 
   <script src="assets/jquery.min.js?v=3.3.1"></script>
   <script src="assets/jquery-ui.min.js?v=1.12.1"></script>

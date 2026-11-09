@@ -7,65 +7,56 @@
   <link rel="icon" href="/eshop.ico" type="image/x-icon" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/site.css?v=2" />
+  <link rel="stylesheet" href="../css/design-refresh.css?v=1" />
+  <link rel="stylesheet" href="../css/reference-pages.css?v=5" />
 </head>
 <body>
   <canvas id="matrix"></canvas>
   <div class="bg-mask"></div>
 
-  <header class="site-header">
-    <nav class="nav-wrap">
-      <a class="brand-link" href="../index.html">EPOCH SHOP</a>
-      <a class="menu-btn" href="../index.html">首頁</a>
-      <a class="menu-btn active" href="products.html">虛擬模型</a>
-      <a class="menu-btn" href="software.html">軟體 / 應用</a>
-      <a class="menu-btn" href="hosting.html">虛擬主機</a>
-      <a class="menu-btn" href="../ai-chat/index.html">AI Chat</a>
-      <a class="menu-btn" href="cart.html">購物車（<span data-cart-count>0</span>）</a>
-      <a class="menu-btn" href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">生活小品</a>
-      <a class="coffee-btn" href="https://www.buymeacoffee.com/haastyu" target="_blank" rel="noopener"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a Coffee&emoji=☕&slug=haastyu&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy me a coffee" /></a>
-      </div>
-      <a class="menu-btn" href="contact.html">聯絡我們</a>
-    </nav>
-  </header>
+  <header class="site-header"><nav class="nav-wrap" aria-label="主要導覽">
+      <a class="brand-link" href="../index.html"><span class="epoch-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><path fill="#80ffc7" d="M24 2 45 13 24 25 15 20 34 9Z"/><path fill="#14de8c" d="M3 14 14 20 14 34 24 40 35 34 45 39 24 48 3 37Z"/><path fill="#08a991" d="M24 25 45 13 45 27 24 39 14 34 35 22 35 19Z"/></svg></span><span>EPOCH SHOP</span></a>
+      <div class="nav-main"><a class="menu-btn" href="../index.html">首頁</a><a class="menu-btn active" href="products.html">虛擬模型</a><a class="menu-btn" href="software.html">軟體 / 應用</a><a class="menu-btn" href="hosting.html">虛擬主機</a><a class="menu-btn" href="../ai-chat/chat.html">AI Chat</a></div>
+      <a class="menu-btn nav-cart" href="cart.html"><span aria-hidden="true">🛒</span> 購物車 <span class="cart-counter" data-cart-count>0</span></a>
+      <div class="nav-secondary"><a href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">✎ 生活小品</a><a class="" href="contact.html">✉ 聯絡我們</a><a class="coffee-btn" href="https://www.buymeacoffee.com/haastyu" target="_blank" rel="noopener"><span aria-hidden="true">☕</span> 贊助一杯咖啡</a></div>
+    </nav></header>
 
   <main>
-    <section class="hero">
-      <h1>虛擬模型</h1>
-      <p class="subtitle">依照您的需求挑選模型商品與客製化服務。</p>
-    </section>
+    <section class="page-hero"><div class="page-hero-copy"><p class="hero-kicker">EPOCH SHOP <span></span></p><h1>虛擬<span>模型</span></h1><p class="page-hero-desc">高品質數位模型資源，涵蓋車輛、建築、人物與工具等多元類別，<br />適用於遊戲開發、地圖場景、創作與應用專案。</p></div><div class="page-orbit" aria-hidden="true"></div></section>
 
-    <h2 class="section-head">伺服器模型精選</h2>
+    <nav class="category-bar" aria-label="商品分類"><button type="button" class="category-button active" data-category-filter="all" aria-pressed="true">▦ 精選推薦</button><button type="button" class="category-button" data-category-filter="vehicle" aria-pressed="false">♧ 車輛模型</button><button type="button" class="category-button" data-category-filter="map" aria-pressed="false">⬡ 建築 / 地圖</button><button type="button" class="category-button" data-category-filter="character" aria-pressed="false">♙ 人物 / 服裝</button><button type="button" class="category-button" data-category-filter="code" aria-pressed="false">⌘ 代碼撰寫</button><button type="button" class="category-button" data-category-filter="edit" aria-pressed="false">⚒ 修改模型</button></nav>
+    <h2 class="sr-only">伺服器模型精選</h2>
     <section class="grid products">
-      <article class="card">
-        <img class="card-image" src="../css/images/service-vehicle-model.png?v=2" alt="車輛模型" loading="lazy" />
+      <article class="card product-card" data-category="vehicle">
+        <img class="card-image" src="../css/images/reference-vehicle.png" alt="車輛模型" loading="lazy" />
         <h3>車輛模型</h3>
         <p class="subtitle">細膩外觀與內裝、優化 LOD，兼顧效能與視覺。</p>
         <p class="price">$115</p>
         <button class="button primary" data-add-to-cart data-id="vehicle-model" data-name="車輛模型" data-price="115">加入購物車</button>
       </article>
-      <article class="card">
-        <img class="card-image" src="../css/images/service-map-building.png?v=2" alt="建築 / 地圖" loading="lazy" />
+      <article class="card product-card" data-category="map">
+        <img class="card-image" src="../css/images/reference-castle.png" alt="建築 / 地圖" loading="lazy" />
         <h3>建築 / 地圖</h3>
         <p class="subtitle">場景、室內外建築與陳設，營造沉浸式城市風格。</p>
         <p class="price">$135</p>
         <button class="button primary" data-add-to-cart data-id="map-building" data-name="建築 / 地圖" data-price="135">加入購物車</button>
       </article>
-      <article class="card">
-        <img class="card-image" src="../css/images/service-npc-skin.png?v=2" alt="人物 / 服裝" loading="lazy" />
+      <article class="card product-card" data-category="character">
+        <img class="card-image" src="../css/images/reference-character.png" alt="人物 / 服裝" loading="lazy" />
         <h3>人物 / 服裝</h3>
         <p class="subtitle">角色外觀、配件與服飾，支援多套件搭配與調整。</p>
         <p class="price">$90</p>
         <button class="button primary" data-add-to-cart data-id="npc-skin" data-name="人物 / 服裝" data-price="90">加入購物車</button>
       </article>
-      <article class="card">
-        <img class="card-image" src="../css/images/service-code.png?v=2" alt="代碼撰寫" loading="lazy" />
+      <article class="card product-card" data-category="code">
+        <img class="card-image" src="../css/images/reference-code.png" alt="代碼撰寫" loading="lazy" />
         <h3>代碼撰寫</h3>
         <p class="subtitle">網站前後端、腳本自動化、Bot、API 串接與效能優化。</p>
         <p class="price">$259 起</p>
         <button class="button primary" data-add-to-cart data-id="custom-code" data-name="代碼撰寫" data-price="259">加入購物車</button>
       </article>
-      <article class="card">
-        <img class="card-image" src="../css/images/service-model-edit.png?v=2" alt="修改模型" loading="lazy" />
+      <article class="card product-card" data-category="edit">
+        <img class="card-image" src="../css/images/reference-model.png" alt="修改模型" loading="lazy" />
         <h3>修改模型</h3>
         <p class="subtitle">依需求調整既有模型細節、材質與效能，提供三種優化方案。</p>
         <div class="cart-row">
@@ -92,8 +83,9 @@
 
   <script src="../js/matrix.js"></script>
   <script src="../js/site.js"></script>
-  <script src="../js/cart.js"></script>
+  <script src="../js/cart.js?v=2"></script>
   <script src="../js/products.js"></script>
+  <script src="../js/product-filters.js"></script>
 
   <script src="../assets/jquery.min.js?v=3.3.1"></script>
   <script src="../assets/jquery-ui.min.js?v=1.12.1"></script>

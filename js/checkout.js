@@ -10,7 +10,11 @@
   const message = document.getElementById("payment-message");
   if (!window.cartApi || !consent || !email || !summary || !form || !submit || !message) return;
 
-  if (CHECKOUT_PAUSED) message.textContent = "線上結帳暫停中，請稍後再試或聯絡我們。";
+  if (CHECKOUT_PAUSED) {
+    message.textContent = "線上結帳暫停中，暫不收集客戶資料。請稍後再試或聯絡我們。";
+    form.querySelectorAll("input").forEach((input) => { input.disabled = true; });
+    form.addEventListener("submit", (event) => event.preventDefault());
+  }
   const cart = window.cartApi.getCart();
   if (!cart.length) {
     summary.textContent = "購物車目前是空的，請先選購商品。";

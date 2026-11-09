@@ -28,6 +28,15 @@ function removeFromCart(id) {
   saveCart(getCart().filter((item) => item.id !== id));
 }
 
+function setQuantity(id, quantity) {
+  if (!Number.isSafeInteger(quantity) || quantity < 1) return;
+  const cart = getCart();
+  const item = cart.find((entry) => entry.id === id);
+  if (!item) return;
+  item.qty = quantity;
+  saveCart(cart);
+}
+
 function clearCart() {
   saveCart([]);
 }
@@ -50,5 +59,5 @@ function hasMixedCart() {
   return hasOneTime && hasRecurring;
 }
 
-window.cartApi = { getCart, addToCart, removeFromCart, clearCart, cartTotal, updateCartCount, hasMixedCart };
+window.cartApi = { getCart, addToCart, removeFromCart, setQuantity, clearCart, cartTotal, updateCartCount, hasMixedCart };
 window.addEventListener("DOMContentLoaded", updateCartCount);

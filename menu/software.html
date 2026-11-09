@@ -7,49 +7,31 @@
   <link rel="icon" href="/eshop.ico" type="image/x-icon" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/site.css?v=2" />
+  <link rel="stylesheet" href="../css/design-refresh.css?v=1" />
+  <link rel="stylesheet" href="../css/reference-pages.css?v=5" />
 </head>
 <body>
   <canvas id="matrix"></canvas>
   <div class="bg-mask"></div>
 
-  <header class="site-header">
-    <nav class="nav-wrap">
-      <a class="brand-link" href="../index.html">EPOCH SHOP</a>
-      <a class="menu-btn" href="../index.html">首頁</a>
-      <a class="menu-btn" href="products.html">虛擬模型</a>
-      <a class="menu-btn active" href="software.html">軟體 / 應用</a>
-      <a class="menu-btn" href="hosting.html">虛擬主機</a>
-      <a class="menu-btn" href="../ai-chat/index.html">AI Chat</a>
-      <a class="menu-btn" href="cart.html">購物車（<span data-cart-count>0</span>）</a>
-      <a class="menu-btn" href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">生活小品</a>
-      <a class="coffee-btn" href="https://www.buymeacoffee.com/haastyu" target="_blank" rel="noopener"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a Coffee&emoji=☕&slug=haastyu&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy me a coffee" /></a>
-      <a class="menu-btn" href="contact.html">聯絡我們</a>
-    </nav>
-  </header>
+  <header class="site-header"><nav class="nav-wrap" aria-label="主要導覽">
+      <a class="brand-link" href="../index.html"><span class="epoch-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><path fill="#80ffc7" d="M24 2 45 13 24 25 15 20 34 9Z"/><path fill="#14de8c" d="M3 14 14 20 14 34 24 40 35 34 45 39 24 48 3 37Z"/><path fill="#08a991" d="M24 25 45 13 45 27 24 39 14 34 35 22 35 19Z"/></svg></span><span>EPOCH SHOP</span></a>
+      <div class="nav-main"><a class="menu-btn" href="../index.html">首頁</a><a class="menu-btn" href="products.html">虛擬模型</a><a class="menu-btn active" href="software.html">軟體 / 應用</a><a class="menu-btn" href="hosting.html">虛擬主機</a><a class="menu-btn" href="../ai-chat/chat.html">AI Chat</a></div>
+      <a class="menu-btn nav-cart" href="cart.html"><span aria-hidden="true">🛒</span> 購物車 <span class="cart-counter" data-cart-count>0</span></a>
+      <div class="nav-secondary"><a href="https://tw.shp.ee/Gb6D24X" target="_blank" rel="noopener">✎ 生活小品</a><a class="" href="contact.html">✉ 聯絡我們</a><a class="coffee-btn" href="https://www.buymeacoffee.com/haastyu" target="_blank" rel="noopener"><span aria-hidden="true">☕</span> 贊助一杯咖啡</a></div>
+    </nav></header>
 
   <main>
-    <section class="hero">
-      <h1>軟體 / 應用</h1>
-      <p class="subtitle">實用軟體與自動化應用。</p>
-    </section>
+    <section class="page-hero"><div class="page-hero-copy"><p class="hero-kicker">EPOCH SHOP <span></span></p><h1>軟體 / <span>應用</span></h1><p class="page-hero-desc">提供專業的軟體與應用服務，協助你將重複性的操作流程<br />轉化為客製化的自動化方案，提升工作效率。</p></div><div class="page-orbit" aria-hidden="true"></div></section>
 
-    <h2 class="section-head">軟體 / 應用精選</h2>
-    <section class="grid products">
-      <article class="card">
-        <img class="card-image" src="../css/images/ai-detection-mouse.png?v=1" alt="mouse bot 客製自動化使用" loading="lazy" />
-        <h3>mouse bot 客製自動化使用</h3>
-        <p class="subtitle">遊戲裡自動化偵測</p>
-        <p class="price">洽詢</p>
-        <a class="button primary" href="contact.html">聯繫客服</a>
-      </article>
-    </section>
+    <section class="software-feature"><div class="software-copy"><h2>mouse bot <span>客製自動化</span></h2><p>針對你的實際需求量身打造的自動化服務，以滑鼠操作為核心，將重複性的流程轉化為專屬的自動化作業。</p><p class="price">洽詢</p><a class="button primary" href="contact.html">☏ 聯繫客服 <span aria-hidden="true">→</span></a></div></section>
   </main>
 
     <footer class="site-footer">© <span id="year"></span> EPOCH SHOP LLC<br />Business Address: 30 N Gould St Ste R, Sheridan, WY 82801, United States<br />Contact: <a href="mailto:yukine@diary-city.com">yukine@diary-city.com</a> · <a href="tel:+13073037141">+1 (307) 303-7141</a><div class="footer-links"><a href="terms.html">服務條款</a><a href="privacy.html">隱私政策</a><a href="refund.html">退款政策</a><a href="delivery.html">交付政策</a></div></footer>
 
   <script src="../js/matrix.js"></script>
   <script src="../js/site.js"></script>
-  <script src="../js/cart.js"></script>
+  <script src="../js/cart.js?v=2"></script>
   <script src="../assets/jquery.min.js?v=3.3.1"></script>
   <script src="../assets/jquery-ui.min.js?v=1.12.1"></script>
 </body>
