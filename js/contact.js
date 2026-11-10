@@ -8,16 +8,15 @@
     status.className = "subtitle";
     status.textContent = "發送中...";
 
-    const surname = document.getElementById("surname").value.trim();
-    const givenName = document.getElementById("given_name").value.trim();
+    const fullName = document.getElementById("contact-name").value.trim();
     const email = document.getElementById("email").value.trim();
     const message = document.getElementById("message").value.trim();
     const subject = document.getElementById("subject").value.trim();
 
     const payload = new FormData();
-    payload.append("name", `${surname}${givenName}`);
+    payload.append("name", fullName);
     payload.append("email", email);
-    payload.append("message", `姓: ${surname}\n名: ${givenName}\n信箱: ${email}\n主旨: ${subject}\n\n內容:\n${message}`);
+    payload.append("message", `姓名: ${fullName}\n信箱: ${email}\n主旨: ${subject}\n\n內容:\n${message}`);
     payload.append("_subject", "EPOCH SHOP 聯絡表單新訊息");
     payload.append("_captcha", "false");
 

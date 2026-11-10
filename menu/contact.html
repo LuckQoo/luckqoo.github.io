@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../css/site.css?v=2" />
   <link rel="stylesheet" href="../css/design-refresh.css?v=1" />
   <link rel="stylesheet" href="../css/reference-pages.css?v=5" />
+  <link rel="stylesheet" href="../css/two-pages.css?v=2" />
 </head>
 <body>
   <canvas id="matrix"></canvas>
@@ -23,12 +24,12 @@
 
   <main class="contact-main"><section class="contact-stage"><div class="contact-copy"><p class="hero-kicker">EPOCH SHOP <span></span></p><h1>聯絡<span>我們</span></h1><p class="page-hero-desc">有任何問題、建議或合作需求，歡迎透過下方表單與我們聯繫。</p>
     <form id="contact-form" class="contact-card" action="https://formsubmit.co/yukine@diary-city.com" method="POST" target="hidden_iframe">
-      <div class="form-row"><span class="field-icon" aria-hidden="true">♙</span><label for="surname">姓名</label><div class="name-inputs"><input type="text" name="surname" id="surname" placeholder="姓" autocomplete="family-name" required /><input type="text" name="given_name" id="given_name" placeholder="名" autocomplete="given-name" required aria-label="名" /></div></div>
-      <div class="form-row"><span class="field-icon" aria-hidden="true">✉</span><label for="email">電子郵件</label><input type="email" name="email" id="email" placeholder="您的信箱" autocomplete="email" required /></div>
-      <div class="form-row"><span class="field-icon" aria-hidden="true">▤</span><label for="subject">主旨</label><input type="text" name="subject" id="subject" placeholder="請輸入主旨" /></div>
-      <div class="form-row message-row"><span class="field-icon" aria-hidden="true">☏</span><label for="message">訊息內容</label><textarea name="message" id="message" rows="6" placeholder="請輸入要發送給我們的內容" required></textarea></div>
+      <div class="form-row"><span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></span><label for="contact-name">姓名</label><input type="text" name="name" id="contact-name" autocomplete="name" required /></div>
+      <div class="form-row"><span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="1"/><path d="m3 6 9 7 9-7"/></svg></span><label for="email">電子郵件</label><input type="email" name="email" id="email" autocomplete="email" required /></div>
+      <div class="form-row"><span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="2.5" width="16" height="19" rx="1"/><path d="M8 7h8M8 11h8M8 15h8"/></svg></span><label for="subject">主旨</label><input type="text" name="subject" id="subject" /></div>
+      <div class="form-row message-row"><span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-8l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M7 11h.01M12 11h.01M17 11h.01" stroke-linecap="round" stroke-width="3"/></svg></span><label for="message">訊息內容</label><textarea name="message" id="message" rows="6" required></textarea></div>
       <input type="hidden" name="_subject" value="EPOCH SHOP 聯絡表單新訊息" /><input type="hidden" name="_captcha" value="false" /><input type="hidden" name="_template" value="table" />
-      <button type="submit" class="button primary contact-send">➤ 發送訊息</button><p id="contact-status" class="subtitle" aria-live="polite"></p>
+      <button type="submit" class="button primary contact-send"><span aria-hidden="true">➤</span> 發送訊息</button><p id="contact-status" class="subtitle" aria-live="polite"></p>
     </form><iframe name="hidden_iframe" style="display:none;" title="hidden submit target"></iframe></div><div class="contact-art" role="img" aria-label="客服與智慧科技插圖"></div></section></main>
 
   <footer class="site-footer">© <span id="year"></span> EPOCH SHOP LLC<br />Business Address: 30 N Gould St Ste R, Sheridan, WY 82801, United States<br />Contact: <a href="mailto:yukine@diary-city.com">yukine@diary-city.com</a> · <a href="tel:+13073037141">+1 (307) 303-7141</a><div class="footer-links"><a href="terms.html">服務條款</a><a href="privacy.html">隱私政策</a><a href="refund.html">退款政策</a><a href="delivery.html">交付政策</a></div></footer>
@@ -36,7 +37,7 @@
   <script src="../js/matrix.js"></script>
   <script src="../js/site.js"></script>
   <script src="../js/cart.js?v=2"></script>
-  <script src="../js/contact.js?v=2"></script>
+  <script src="../js/contact.js?v=3"></script>
 
   <script src="../assets/jquery.min.js?v=3.3.1"></script>
   <script src="../assets/jquery-ui.min.js?v=1.12.1"></script>

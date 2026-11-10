@@ -10,32 +10,10 @@
 <link rel="stylesheet" href="assets/css/site.css?v=2">
   <link rel="stylesheet" href="../css/design-refresh.css?v=1" />
 <link rel="stylesheet" href="assets/css/chat-widget.css?v=2">
-<style>
-	.ai-chat-layout {
-		display: grid;
-		grid-template-columns: 420px 1fr;
-		gap: 1rem;
-		align-items: start;
-	}
-	.ai-chat-layout .waifu {
-		position: relative;
-		width: 420px;
-		height: 380px;
-		overflow: hidden;
-	}
-	.ai-chat-layout .waifu #live2d-canvas {
-		width: 100%;
-		height: 100%;
-		display: block;
-	}
-	@media (max-width: 860px) {
-		.ai-chat-layout {
-			grid-template-columns: 1fr;
-			justify-items: center;
-		}
-	}
-</style>
+
   <link rel="stylesheet" href="../css/reference-pages.css?v=5" />
+  <link rel="stylesheet" href="../css/two-pages.css?v=2" />
+  <link rel="stylesheet" href="assets/css/robot-assistant.css?v=4" />
 </head>
 <body>
 <canvas id="matrix"></canvas>
@@ -45,46 +23,34 @@
 
 <div class="chat-page-wrap">
 	<div class="container">
-		<div id="chat-local-preview" class="local-ai-preview" hidden>
-      <p class="local-preview-notice">本機設計預覽：登入與聊天功能須在正式網域使用。</p>
-      <div class="ai-reference-layout"><aside class="ai-assistant-panel"><p class="hero-kicker">EPOCH AI 助理 <span></span></p><h1>阿容</h1><p>你的 EPOCH AI 助理，<br />協助解答、創作與應用建議。</p><div class="assistant-orb" aria-hidden="true"></div><div class="assistant-placeholder">◇<br />Live2D 角色位置</div></aside>
-      <section class="ai-conversation"><header class="ai-conversation-header"><h2>歡迎與<span>阿容</span>對話！</h2><p>無論是產品應用、技術諮詢、創作發想或使用建議，都可以跟我聊聊。</p></header><div class="preview-dialog"><div class="preview-user">我想在遊戲中使用高品質的 3D 模型，建議我從哪裡開始準備？</div><div class="preview-bot">這是很棒的問題！<br />一般可從「明確需求、選擇合適的模型與格式、整合到遊戲引擎、以及效能優化」等步驟來規劃。<br /><small>範例內容，僅供畫面預覽。</small></div></div><div class="preview-compose"><span>✧　請輸入你的問題或需求...</span><span>🌐 網路搜尋：開</span><button type="button" disabled>➤ 送出</button></div></section></div></div>
-    <script>if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') document.getElementById('chat-local-preview').hidden = false;</script>
-
-		<div id="chat-locked" class="epoch-ai-chat-locked" style="display:none">
-			<p lang="zh-TW">請先註冊或登入帳號才能使用 AI 聊天室。</p>
-			<p lang="en"><em>Please register or log in to use the AI chat.</em></p>
-			<p><a class="epoch-ai-chat-cta" href="#" id="chat-locked-cta">前往註冊 / 登入 / Register or log in</a></p>
-		</div>
-
-		<div id="chat-signed-in-area" style="display:none">
-
-		<div class="ai-chat-layout ai-reference-layout">
-            <aside class="ai-assistant-panel"><p class="hero-kicker">EPOCH AI 助理 <span></span></p><h1>阿容</h1><p>你的 EPOCH AI 助理，<br />協助解答、創作與應用建議。</p><div class="assistant-orb" aria-hidden="true"></div>
-			<div class="waifu">
-				<canvas id="live2d-canvas" class="live2d"></canvas>
-			</div></aside>
-			<div class="epoch-ai-chat ai-conversation">
-				<header class="ai-conversation-header"><h2>歡迎與<span>阿容</span>對話！</h2><p>無論是產品應用、技術諮詢、創作發想或使用建議，都可以跟我聊聊。</p></header>
-				<div class="epoch-ai-chat-toolbar">
-					<button type="button" class="epoch-ai-chat-lang-toggle active" id="chat-search-toggle" title="開啟時將本次問題傳送給 Tavily 搜尋，請勿輸入敏感資料" aria-pressed="true">🔍 網路搜尋：開</button>
-				<button type="button" class="epoch-ai-chat-lang-toggle">EN</button>
-				</div>
-				<p style="font-size:0.8em; opacity:0.8; margin:0.25em 0.75em">開啟網路搜尋時，本次問題會傳送至 Tavily；請勿輸入密碼或其他敏感資料。搜尋結果和 AI 回答可能有誤，請查閱來源。</p>
-				<div class="epoch-ai-chat-messages" id="chat-messages">
-					<div class="epoch-ai-chat-msg epoch-ai-chat-msg--assistant">
-						<div class="epoch-ai-chat-bubble">你好，我是 EPOCH AI，我叫阿容。有什麼我可以幫忙的嗎？</div>
-					</div>
-				</div>
-				<form class="epoch-ai-chat-form" id="chat-form">
-					<textarea class="epoch-ai-chat-input" id="chat-input" rows="1" placeholder="輸入訊息..."></textarea>
-					<button type="submit" class="epoch-ai-chat-send" id="chat-send">送出</button>
-				</form>
-			</div>
-		</div>
-
-		</div>
-
+        <p id="chat-local-notice" class="local-preview-notice" hidden>本機設計預覽：登入與實際聊天功能須在正式官網使用。</p>
+        <div id="chat-signed-in-area">
+          <div class="ai-chat-layout ai-reference-layout">
+            <aside class="ai-assistant-panel">
+              <div class="assistant-intro"><p class="hero-kicker">EPOCH AI 助理 <span></span></p><h1>阿容</h1><p>你的 EPOCH AI 助理，<br />協助解答、創作與應用建議。</p></div>
+              <div class="assistant-orb" aria-hidden="true"><span>AI</span></div>
+              <div class="assistant-avatar-stage">
+                <button type="button" class="robot-character" id="robot-character" data-emotion="happy" aria-label="機器人目前表情：開心；按一下切換表情" title="按一下切換機器人表情">
+                  <img src="../css/images/epoch-robot.png" alt="白色和黑色的阿容機器人" width="1093" height="1439" />
+                  <svg class="robot-face" viewBox="0 0 120 70" aria-hidden="true">
+                    <g class="robot-expression robot-happy"><path d="M11 36 Q20 11 30 36 M90 36 Q100 11 109 36"/><path d="M53 45 Q60 52 67 45"/></g>
+                    <g class="robot-expression robot-excited"><path d="M10 22 L30 33 L10 43 M110 22 L90 33 L110 43"/><path d="M54 46 Q60 52 66 46"/></g>
+                    <g class="robot-expression robot-surprised"><circle cx="25" cy="33" r="10"/><circle cx="95" cy="33" r="10"/><circle cx="60" cy="48" r="3"/></g>
+                    <g class="robot-expression robot-sleep"><path d="M12 35 Q22 46 32 35 M88 35 Q98 46 108 35 M54 48 Q60 52 66 48"/><text x="87" y="14">z</text><text x="99" y="7">z</text></g>
+                  </svg>
+                </button>
+                <span class="robot-hint">點一下機器人切換表情</span>
+              </div>
+            </aside>
+            <section class="epoch-ai-chat ai-conversation" aria-label="AI 聊天室">
+              <header class="ai-conversation-header"><h2>歡迎與<span>阿容</span>對話！</h2><p>無論是產品應用、技術諮詢、創作發想或使用建議，都可以跟我聊聊。</p></header>
+              <div id="chat-locked" class="chat-login-notice" role="status"><span id="chat-lock-text">請先註冊或登入帳號才能使用 AI 聊天室。</span> <a href="#" id="chat-locked-cta">前往註冊 / 登入</a></div>
+              <div class="chat-disclosure">開啟網路搜尋時，問題會傳送至 Tavily；請勿輸入敏感資料。搜尋結果和 AI 回答可能有誤，請查閱來源。</div>
+              <div class="epoch-ai-chat-messages" id="chat-messages"><div class="epoch-ai-chat-msg epoch-ai-chat-msg--assistant"><div class="epoch-ai-chat-bubble">你好，我是 EPOCH AI，我叫阿容。有什麼我可以幫忙的嗎？</div></div></div>
+              <form class="epoch-ai-chat-form" id="chat-form"><span class="compose-spark" aria-hidden="true">✧</span><textarea class="epoch-ai-chat-input" id="chat-input" rows="1" placeholder="請輸入你的問題或需求..." aria-label="輸入訊息" disabled></textarea><button type="button" class="epoch-ai-chat-lang-toggle active" id="chat-search-toggle" title="開啟時將本次問題傳送給 Tavily 搜尋，請勿輸入敏感資料" aria-pressed="true" disabled>🌐 網路搜尋：開</button><button type="submit" class="epoch-ai-chat-send" id="chat-send" disabled>➤ 送出</button></form>
+            </section>
+          </div>
+        </div>
 	</div>
 </div>
 
@@ -106,47 +72,32 @@
 <script src="assets/js/clerk-config.js?v=6"></script>
 <script src="assets/js/api-config.js?v=5"></script>
 <script src="assets/js/auth.js?v=6"></script>
+<script src="assets/js/robot-assistant.js?v=2"></script>
 <script>
 (function () {
 	var locked = document.getElementById('chat-locked');
 	var signedInArea = document.getElementById('chat-signed-in-area');
 	var lockedCta = document.getElementById('chat-locked-cta');
 
-	var live2dLoaded = false;
-	function ensureLive2d() {
-		if (live2dLoaded) return;
-		live2dLoaded = true;
-		var scripts = [
-			'assets/vendor/pixi.min.js',
-			'assets/vendor/live2dcubismcore.min.js',
-			'assets/vendor/pixi-live2d-cubism4.min.js',
-			'assets/vendor/pixi-live2d-display.min.js',
-			'assets/js/live2d-boy.js',
-		];
-		var i = 0;
-		function loadNext() {
-			if (i >= scripts.length) return;
-			var s = document.createElement('script');
-			s.src = scripts[i++];
-			s.onload = loadNext;
-			document.body.appendChild(s);
-		}
-		loadNext();
-	}
 
 	function applyAuthState(detail) {
-		if (detail.error || detail.unconfigured) {
-			lockedCta.textContent = '登入服務暫時無法使用，請稍後再試';
-			lockedCta.removeAttribute('href');
-		}
-		if (detail.signedIn) {
-			locked.style.display = 'none';
-			signedInArea.style.display = '';
-			ensureLive2d();
-		} else {
-			locked.style.display = '';
-			signedInArea.style.display = 'none';
-		}
+        var isLocalPreview = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        var canChat = !!detail.signedIn && !isLocalPreview;
+        document.getElementById('chat-local-notice').hidden = !isLocalPreview;
+        document.getElementById('chat-input').disabled = !canChat;
+        document.getElementById('chat-send').disabled = !canChat;
+        document.getElementById('chat-search-toggle').disabled = !canChat;
+        document.body.classList.toggle('chat-authenticated', canChat);
+        signedInArea.style.display = '';
+        locked.style.display = canChat ? 'none' : '';
+        if (isLocalPreview) {
+            document.getElementById('chat-lock-text').textContent = '本機為版面預覽，請在正式官網登入後聊天。';
+            lockedCta.style.display = 'none';
+        } else if (detail.error || detail.unconfigured) {
+            lockedCta.textContent = '登入服務暫時無法使用，請稍後再試';
+            lockedCta.removeAttribute('href');
+        }
+
 	}
 
 	document.addEventListener('epoch-auth-ready', function (e) {
@@ -208,9 +159,9 @@
 		wrapper.appendChild(bubble);
 		if (Array.isArray(sources) && sources.length) {
 			var sourceList = document.createElement('div');
-			sourceList.style.marginTop = '0.6em';
+			sourceList.className = 'chat-source-list';
 			var heading = document.createElement('div');
-			heading.textContent = '搜尋資料來源（請查閱原文確認）：';
+			heading.textContent = '⌁ 資料來源（請查閱原文確認）：';
 			sourceList.appendChild(heading);
 			sources.slice(0, 4).forEach(function (source, i) {
 				try {
@@ -221,7 +172,7 @@
 					link.target = '_blank';
 					link.rel = 'noopener noreferrer';
 					link.textContent = '[' + (i + 1) + '] ' + String(source.title || url.hostname);
-					link.style.display = 'block';
+					link.className = 'chat-source-link';
 					sourceList.appendChild(link);
 				} catch (_) { /* Ignore invalid search result URLs. */ }
 			});
@@ -254,6 +205,7 @@
 		sendBtn.disabled = true;
 		sendBtn.textContent = '阿容思考中，可能需要一分鐘…';
 		appendMessage('user', text);
+        document.dispatchEvent(new CustomEvent('epoch-robot-state', { detail: 'thinking' }));
 
 		try {
 			var token = await window.Clerk.session.getToken();
@@ -267,10 +219,12 @@
 			});
 
 			if (res.status === 403) {
+                document.dispatchEvent(new CustomEvent('epoch-robot-state', { detail: 'surprised' }));
 				appendMessage('assistant', '請先訂閱方案才能收到 AI 回覆，訂閱後即可立即開始對話。', true);
 				return;
 			}
 			if (res.status === 429) {
+                document.dispatchEvent(new CustomEvent('epoch-robot-state', { detail: 'surprised' }));
 				var limitInfo = await res.json().catch(function () { return {}; });
 				appendMessage('assistant', limitInfo.error === 'service_daily_limit_exceeded'
 					? '目前服務已達今日對話上限，請稍後再試。'
@@ -280,6 +234,7 @@
 				return;
 			}
 			if (!res.ok) {
+                document.dispatchEvent(new CustomEvent('epoch-robot-state', { detail: 'surprised' }));
 				var errorInfo = await res.json().catch(function () { return {}; });
 				appendMessage('assistant', errorInfo.error === 'search_unavailable' || errorInfo.error === 'search_not_configured'
 					? '目前無法取得網路搜尋結果，請稍後再試；也可關閉網路搜尋繼續一般聊天。'
@@ -291,12 +246,14 @@
 			history.push({ role: 'user', content: text });
 			history.push({ role: 'assistant', content: data.reply });
 			appendMessage('assistant', data.reply, false, data.sources);
+            document.dispatchEvent(new CustomEvent('epoch-robot-state', { detail: 'happy' }));
 		} catch (err) {
+            document.dispatchEvent(new CustomEvent('epoch-robot-state', { detail: 'surprised' }));
 			console.error('[epoch-ai-chat] chat request failed', err);
 			appendMessage('assistant', '無法連線至 AI 服務，請稍後再試。');
 		} finally {
 			sendBtn.disabled = false;
-			sendBtn.textContent = '送出';
+			sendBtn.textContent = '➤ 送出';
 		}
 	});
 })();
