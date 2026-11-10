@@ -2,11 +2,13 @@
   const form = document.getElementById("contact-form");
   const status = document.getElementById("contact-status");
   if (!form || !status) return;
+  const submitButton = form.querySelector('button[type="submit"]');
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     status.className = "subtitle";
     status.textContent = "發送中...";
+    submitButton.disabled = true;
 
     const fullName = document.getElementById("contact-name").value.trim();
     const email = document.getElementById("email").value.trim();
@@ -33,22 +35,19 @@
       } catch {
         data = {};
       }
-      if (!res.ok || data.success !== "true") {
+      if (!res.ok || (data.success !== "true" && data.success !== true)) {
         const msg = data.message || `HTTP ${res.status}`;
         throw new Error(msg);
       }
 
       status.className = "subtitle status-ok";
-      status.textContent = "發送成功 請注意回覆訊息 沒收到訊息請檢查垃圾郵件";
+      status.textContent = "訊息已送出，我們會盡快回覆您。";
       form.reset();
     } catch (err) {
       status.className = "subtitle status-error";
-      status.textContent = `AJAX 發送失敗，改用表單直送中...（${err.message}）`;
-      setTimeout(() => {
-        form.submit();
-        status.className = "subtitle status-ok";
-        status.textContent = "感謝您，我們會盡快回復您的訊息。";
-      }, 250);
+      status.textContent = "訊息未能送出，請稍後再試，或直接寄信至 yukine@diary-city.com。";
+    } finally {
+      submitButton.disabled = false;
     }
   });
 })();
