@@ -19,6 +19,9 @@
 .robot-expression{display:none}.robot-character[data-emotion="happy"] .robot-happy,.robot-character[data-emotion="excited"] .robot-excited,.robot-character[data-emotion="surprised"] .robot-surprised,.robot-character[data-emotion="sleep"] .robot-sleep{display:block}
 .robot-sleep text{fill:#b6ffde;stroke:none;font-family:Arial,sans-serif;font-size:12px;font-weight:bold}
 .robot-hint{position:absolute;z-index:3;bottom:8px;left:0;right:0;text-align:center;color:#afdbbd;font-size:.7rem;letter-spacing:.04em;pointer-events:none}
+/* Continue the same artwork behind the heading, conversation, and composer. */
+.ai-chat-layout .epoch-ai-chat{background:linear-gradient(90deg,rgba(0,22,16,.48),rgba(0,22,16,.25)),url('../../../css/images/chat-conversation-background.png') center/cover no-repeat,#001b15}
+.ai-chat-layout .ai-conversation-header{background:linear-gradient(90deg,rgba(0,32,22,.38),rgba(0,32,22,.12));border-bottom-color:rgba(105,210,150,.35)}
 @keyframes robot-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes assistant-orbit{from{transform:rotate(-25deg)}to{transform:rotate(335deg)}}
 @media(max-width:1100px){.assistant-intro{max-width:none}.assistant-intro>p:last-child{max-width:100%;font-size:.8rem}}

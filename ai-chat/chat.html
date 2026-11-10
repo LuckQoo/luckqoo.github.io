@@ -13,7 +13,7 @@
 
   <link rel="stylesheet" href="../css/reference-pages.css?v=5" />
   <link rel="stylesheet" href="../css/two-pages.css?v=2" />
-  <link rel="stylesheet" href="assets/css/robot-assistant.css?v=4" />
+  <link rel="stylesheet" href="assets/css/robot-assistant.css?v=5" />
 </head>
 <body>
 <canvas id="matrix"></canvas>
@@ -45,9 +45,8 @@
             <section class="epoch-ai-chat ai-conversation" aria-label="AI 聊天室">
               <header class="ai-conversation-header"><h2>歡迎與<span>阿容</span>對話！</h2><p>無論是產品應用、技術諮詢、創作發想或使用建議，都可以跟我聊聊。</p></header>
               <div id="chat-locked" class="chat-login-notice" role="status"><span id="chat-lock-text">請先註冊或登入帳號才能使用 AI 聊天室。</span> <a href="#" id="chat-locked-cta">前往註冊 / 登入</a></div>
-              <div class="chat-disclosure">開啟網路搜尋時，問題會傳送至 Tavily；請勿輸入敏感資料。搜尋結果和 AI 回答可能有誤，請查閱來源。</div>
               <div class="epoch-ai-chat-messages" id="chat-messages"><div class="epoch-ai-chat-msg epoch-ai-chat-msg--assistant"><div class="epoch-ai-chat-bubble">你好，我是 EPOCH AI，我叫阿容。有什麼我可以幫忙的嗎？</div></div></div>
-              <form class="epoch-ai-chat-form" id="chat-form"><span class="compose-spark" aria-hidden="true">✧</span><textarea class="epoch-ai-chat-input" id="chat-input" rows="1" placeholder="請輸入你的問題或需求..." aria-label="輸入訊息" disabled></textarea><button type="button" class="epoch-ai-chat-lang-toggle active" id="chat-search-toggle" title="開啟時將本次問題傳送給 Tavily 搜尋，請勿輸入敏感資料" aria-pressed="true" disabled>🌐 網路搜尋：開</button><button type="submit" class="epoch-ai-chat-send" id="chat-send" disabled>➤ 送出</button></form>
+              <form class="epoch-ai-chat-form" id="chat-form"><span class="compose-spark" aria-hidden="true">✧</span><textarea class="epoch-ai-chat-input" id="chat-input" rows="1" placeholder="請輸入你的問題或需求..." aria-label="輸入訊息" disabled></textarea><button type="button" class="epoch-ai-chat-lang-toggle active" id="chat-search-toggle" aria-pressed="true" disabled>🌐 網路搜尋：開</button><button type="submit" class="epoch-ai-chat-send" id="chat-send" disabled>➤ 送出</button></form>
             </section>
           </div>
         </div>
