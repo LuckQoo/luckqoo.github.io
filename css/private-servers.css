@@ -1,0 +1,19 @@
+.private-server-hero{min-height:290px;background-image:linear-gradient(90deg,#00110ff5,#00110fbf 55%,#00110f55),url('../private-servers/gugu/assets/hero-adventure.png');background-position:center,center 40%}
+.server-collection{padding:30px 0}
+.gugu-server-card{display:grid;grid-template-columns:1.1fr 1fr;border:1px solid #52846a;border-radius:18px;background:linear-gradient(135deg,#092a20,#031610);overflow:hidden;box-shadow:0 18px 60px #0003}
+.gugu-server-art{display:block;min-width:0;overflow:hidden}
+.gugu-server-art img{display:block;width:100%;height:100%;min-height:420px;object-fit:cover;object-position:65% center;transition:transform .3s}
+.gugu-server-art:hover img{transform:scale(1.025)}
+.gugu-server-copy{padding:38px 42px;min-width:0}
+.server-card-heading{display:flex;justify-content:space-between;align-items:center;gap:15px}
+.server-eyebrow{font-size:.75rem;font-weight:800;letter-spacing:.18em;color:#baff6d}
+.server-preparation{padding:6px 13px;border:1px solid #7d9154;border-radius:30px;background:#b1d66413;color:#e0edb2;font-size:.75rem;white-space:nowrap}
+.gugu-server-copy h2{font-size:clamp(2rem,4vw,3rem);margin:20px 0 12px;color:#f3ffe9}
+.gugu-server-copy>p{color:#d0e3d6;line-height:1.9}
+.server-details{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 28px}
+.server-details li{font-size:.78rem;border:1px solid #3e7259;padding:7px 10px;border-radius:5px;color:#d6eaca}
+.gugu-server-copy .button{display:inline-flex;gap:24px;padding:14px 25px}
+.gugu-server-copy .server-note{margin:24px 0 0;font-size:.8rem;color:#9bb7a6}
+@media(max-width:900px){.gugu-server-card{grid-template-columns:1fr}.gugu-server-art img{height:300px;min-height:0}.gugu-server-copy{padding:28px}}
+@media(max-width:600px){.private-server-hero .page-hero-copy{padding:25px 18px}.private-server-hero{min-height:260px}.server-collection{padding:20px 0}.gugu-server-art img{height:220px}.gugu-server-copy{padding:23px}.gugu-server-copy .button{width:100%;justify-content:center}.server-details{gap:6px}}
+@media(prefers-reduced-motion:reduce){.gugu-server-art img{transition:none}}
