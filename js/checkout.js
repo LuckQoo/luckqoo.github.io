@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const API_BASE = "https://pay.epoch-shop.com";
-  const CHECKOUT_PAUSED = true;
+  const CHECKOUT_PAUSED = false;
   const consent = document.getElementById("policy-consent");
   const email = document.getElementById("customer-email");
   const summary = document.getElementById("checkout-cart-summary");
