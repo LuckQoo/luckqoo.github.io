@@ -5,6 +5,7 @@
 //   - 對外廣播 "epoch-auth-ready" 事件（detail: { signedIn, unconfigured, error }），
 //     讓 chat.html 用來決定要不要顯示「請先登入」的鎖定畫面。
 (function () {
+	var assetBase = new URL(".", document.currentScript.src);
 	function loadClerkScript(cfg) {
 		return new Promise(function (resolve, reject) {
 			var script = document.createElement("script");
@@ -73,8 +74,52 @@
 		}
 
 		try {
+			var translations = await import("./clerk-zh-tw.mjs").catch(function (err) {
+				console.warn("[epoch-auth] 無法載入繁體中文，將使用預設語言", err);
+				return {};
+			});
+			var localization = translations.zhTW && Object.assign({}, translations.zhTW, {
+				formFieldInputPlaceholder__firstName: "請輸入名字",
+				formFieldInputPlaceholder__lastName: "請輸入姓氏",
+				formFieldInputPlaceholder__emailAddress: "請輸入電子郵件地址",
+				formFieldInputPlaceholder__password: "請輸入密碼",
+				signUp: Object.assign({}, translations.zhTW.signUp, {
+					start: Object.assign({}, translations.zhTW.signUp.start, {
+						title: "建立會員帳號", subtitle: "歡迎加入！請填寫以下資料以開始使用。",
+						actionText: "已經有帳號了？", actionLink: "登入"
+					})
+				})
+			});
 			await loadClerkScript(cfg);
-			await window.Clerk.load();
+			await window.Clerk.load({
+				localization: localization,
+				appearance: {
+					layout: { logoImageUrl: new URL("../images/epoch-auth-logo.svg", assetBase).href },
+					variables: {
+						colorPrimary: "#aaff45", colorBackground: "#062219",
+						colorText: "#f2fff8", colorTextSecondary: "#b9d3c4",
+						colorInputBackground: "#0a3125", colorInputText: "#f2fff8",
+						colorTextOnPrimaryBackground: "#07150b", borderRadius: "0.85rem"
+					},
+					elements: {
+						card: { border: "1px solid #62d48c", boxShadow: "0 0 38px rgba(53, 246, 119, .22)", background: "linear-gradient(145deg, #0c3526, #031711)" },
+						footer: {
+							background: "#062219", position: "relative",
+							"&::after": {
+								content: '""', position: "absolute", bottom: 0, left: 0, right: 0,
+								height: "48px", backgroundColor: "#062219",
+								backgroundImage: 'url("' + new URL("../images/epoch-auth-logo.svg", assetBase).href + '")',
+								backgroundRepeat: "no-repeat", backgroundPosition: "center", backgroundSize: "120px auto",
+								pointerEvents: "none"
+							}
+						},
+						formButtonPrimary: { background: "linear-gradient(105deg, #d5ff6a, #57f35b)", color: "#07150b", fontWeight: "700" },
+						formFieldInput: { border: "1px solid #4a9870" },
+						footerActionLink: { color: "#b8ff62" },
+						headerTitle: { color: "#f2fff8" }, headerSubtitle: { color: "#b9d3c4" }
+					}
+				}
+			});
 		} catch (err) {
 			console.error("[epoch-auth] Clerk 載入失敗", err);
 			renderUnavailable();
